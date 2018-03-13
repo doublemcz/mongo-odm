@@ -33,7 +33,7 @@ export class Repository<T extends BaseDocument> {
    * @param {object} where
    * @returns {Promise}
    */
-  public async findOne(where: any = {}): Promise<T | null> {
+  public async findOneBy(where: any = {}): Promise<T | null> {
     let result = await this.collection.findOne(where);
     return this.mapResultProperties(result);
   }

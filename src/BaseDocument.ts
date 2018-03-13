@@ -7,6 +7,15 @@ export abstract class BaseDocument {
 
   protected static collectionName: string;
 
+  /**
+   * @param {Object} properties
+   */
+  public constructor(properties: any = {}) {
+    for (const property in properties) {
+      this[property] = properties[property];
+    }
+  }
+
   @Property()
   public _id: ObjectID;
 

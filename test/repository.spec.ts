@@ -9,16 +9,16 @@ describe('Repository', () => {
     expect(userRepository.getCollectionName()).to.equal('user');
   });
 
-  it('should check document creation', async () => {
+  it('should create document', async () => {
     const user = new User();
     user.fullname = "Martin Mika";
     await userRepository.create(user);
     expect(user).to.property('fullname', 'Martin Mika');
+    expect(String(user.getId())).be.a('string');
   });
 
   it('should return document from find one by id', async () => {
-    const user = new User();
-    user.fullname = "Martin Mika";
+    const user = new User({fullName: "Martin Mika"});
     await userRepository.create(user);
 
     const foundUser = await userRepository.findOneById(user.getId());
@@ -27,6 +27,13 @@ describe('Repository', () => {
     } else {
       throw new Error('findOnById returned nothing');
     }
+  });
+
+  it('should return document from find one', async () => {
+    const user = new User({fullName: "findOneBy"});
+    await userRepository.create(user);
+    const foundUser = await userRepository.findOneBy({fullName: "findOneBy"});
+    expect(foundUser).to.be.a('object');
   });
 
 });
