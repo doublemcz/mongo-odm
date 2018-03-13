@@ -1,0 +1,24 @@
+{
+  "name": "mongo-odm",
+  "version": "0.0.1",
+  "description": "Mongo ODB client",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test NODE_CONFIG_DIR=./test mocha -r ts-node/register test/**/*.spec.ts"
+  },
+  "author": "Martin Mika",
+  "license": "MIT",
+  "dependencies": {
+    "@types/mongodb": "^3.0.7",
+    "mongodb": "^3.0.4",
+    "ts-node": "^5.0.1",
+    "typescript": "^2.7.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.2",
+    "@types/mocha": "^2.2.48",
+    "chai": "^4.1.2",
+    "mikro-config": "^1.2.2",
+    "mocha": "^5.0.4"
+  }
+}
