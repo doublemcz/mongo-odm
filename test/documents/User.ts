@@ -3,9 +3,13 @@ import { Document } from '../../src/Decorators/Document';
 import { Property } from '../../src/Decorators/Property';
 import { OneToMany } from '../../src/Decorators/OneToMany';
 import { Log } from './Log';
+import { ObjectID } from 'bson';
 
-@Document({collectionName: 'test'})
+@Document()
 export class User extends BaseDocument {
+
+  @Property({field: '_id'})
+  public id: ObjectID;
 
   @Property()
   public fullName: string;
@@ -13,7 +17,7 @@ export class User extends BaseDocument {
   @Property({test: 1})
   public age: number;
 
-  @OneToMany({referencedField: 'user'})
+  @OneToMany({referencedField: 'user', type: Log})
   public log: Log[];
 
   private privateProperty = "hidden";

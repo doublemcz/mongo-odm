@@ -1,6 +1,3 @@
-import { Property } from './Decorators/Property';
-import { ObjectID } from 'bson';
-
 export abstract class BaseDocument {
 
   [key: string]: any;
@@ -16,23 +13,6 @@ export abstract class BaseDocument {
     }
   }
 
-  @Property()
-  public _id: ObjectID;
-
-  /**
-   * @returns {ObjectID}
-   */
-  getId(): ObjectID {
-    return this._id;
-  }
-
-  /**
-   * @returns {string}
-   */
-  getPlainId(): string {
-    return String(this._id);
-  }
-
   /**
    * @returns {object}
    */
@@ -40,10 +20,10 @@ export abstract class BaseDocument {
     const result: any = {};
     for (let property in this.getProperties()) {
       if (property == '_id') {
-        property = 'id';
+        result['id'] = this['_id'];
+      } else {
+        result[property] = this[property];
       }
-
-      result[property] = this[property];
     }
 
     return result;
@@ -53,7 +33,7 @@ export abstract class BaseDocument {
    * @returns {any[]}
    */
   public getProperties() {
-    return this.__proto__.__proto__.properties;
+    return this._odm.properties;
   }
 
 }

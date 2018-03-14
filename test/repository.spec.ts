@@ -2,6 +2,10 @@ import { expect } from 'chai';
 import 'mocha';
 import { userRepository } from './repositories/UserRepository';
 import { User } from './documents/User';
+import { Log } from './documents/Log';
+import { Repository } from '../src/Repository';
+import { dbPromise } from './core/connection';
+import { isArray } from 'util';
 
 describe('Repository', () => {
 
@@ -14,19 +18,33 @@ describe('Repository', () => {
     user.fullname = 'Martin Mika';
     await userRepository.create(user);
     expect(user).to.property('fullname', 'Martin Mika');
-    expect(String(user.getId())).be.a('string');
+    expect(String(String(user.id))).be.a('string');
   });
 
   it('should find document from find one by id', async () => {
     const user = new User({fullName: 'Martin Mika'});
     await userRepository.create(user);
-
-    const foundUser = await userRepository.findOneById(user.getId());
+    const foundUser = await userRepository.findOneById(user._id);
     if (foundUser) {
       expect(foundUser.someUserMember).to.equal('Hey!');
     } else {
       throw new Error('findOnById returned nothing');
     }
+  });
+
+  it('should find document from find one by id and populate log', async () => {
+    const user = new User({fullName: 'Martin Mika'});
+    await userRepository.create(user);
+
+    const logRepository = new Repository<Log>(Log, dbPromise);
+    const log = new Log({eventType: 1, user: user.id});
+    await logRepository.create(log);
+    const foundUser = await userRepository.findOneById(user._id, ['log']);
+    // if (foundUser && isArray(foundUser.log) && foundUser.log.length) {
+    //   expect(foundUser.log[0].eventType).eq(1);
+    // } else {
+    //   throw new Error('findOnById didn\'t returned log array at all');
+    // }
   });
 
   it('should find document from find one', async () => {

@@ -15,7 +15,7 @@ describe('Model', () => {
     expect(Object.keys(user.toObject())).not.contains('privateProperty');
   });
 
-  it('should contain id property in toObject', async () => {
+  it('should contain `id` property in toObject', async () => {
     const user = new User();
     expect(Object.keys(user.toObject())).to.contains('id');
   });

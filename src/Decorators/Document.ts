@@ -3,11 +3,17 @@
  * @returns {(target: (Function | any)) => Function | any}
  * @constructor
  */
-export function Document(decoratorOptions: any) {
+export function Document(decoratorOptions: any = {}) {
   return function (target: Function | any) {
-    target.prototype.decoratorOptions = decoratorOptions;
-    target.prototype.collectionName = target.prototype.decoratorOptions.collectionMame || target.name.toLowerCase();
+    target._odm = target._odm || {};
+    if (decoratorOptions) {
+      Object.assign(target._odm, decoratorOptions);
+    }
+
+    if (!target._odm.collectionName) {
+      target._odm.collectionName = target.name.toLowerCase();
+    }
 
     return target;
   }
-};
+}

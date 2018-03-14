@@ -11,6 +11,7 @@
   "dependencies": {
     "@types/mongodb": "^3.0.7",
     "mongodb": "^3.0.4",
+    "reflect-metadata": "^0.1.12",
     "ts-node": "^5.0.1",
     "typescript": "^2.7.2"
   },
