@@ -36,4 +36,12 @@ describe('Repository', () => {
     expect(foundUser).to.be.a('object');
   });
 
+  it('should return array of documents from findBy', async () => {
+    await userRepository.create(new User({fullName: 'findOne'}));
+    await userRepository.create(new User({fullName: 'findOne'}));
+    const foundUsers = await userRepository.findBy({fullName: "findOne"});
+    expect(foundUsers.length).to.be.gt(0);
+    expect(foundUsers[0].fullName).to.string('findOne');
+  });
+
 });
