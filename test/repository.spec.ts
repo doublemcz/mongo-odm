@@ -11,14 +11,14 @@ describe('Repository', () => {
 
   it('should create document', async () => {
     const user = new User();
-    user.fullname = "Martin Mika";
+    user.fullname = 'Martin Mika';
     await userRepository.create(user);
     expect(user).to.property('fullname', 'Martin Mika');
     expect(String(user.getId())).be.a('string');
   });
 
   it('should find document from find one by id', async () => {
-    const user = new User({fullName: "Martin Mika"});
+    const user = new User({fullName: 'Martin Mika'});
     await userRepository.create(user);
 
     const foundUser = await userRepository.findOneById(user.getId());
@@ -30,24 +30,24 @@ describe('Repository', () => {
   });
 
   it('should find document from find one', async () => {
-    const user = new User({fullName: "findOneBy"});
+    const user = new User({fullName: 'findOneBy'});
     await userRepository.create(user);
-    const foundUser = await userRepository.findOneBy({fullName: "findOneBy"});
+    const foundUser = await userRepository.findOneBy({fullName: 'findOneBy'});
     expect(foundUser).to.be.a('object');
   });
 
   it('should find array of documents from findBy', async () => {
     await userRepository.create(new User({fullName: 'findOne'}));
     await userRepository.create(new User({fullName: 'findOne'}));
-    const foundUsers = await userRepository.findBy({fullName: "findOne"});
+    const foundUsers = await userRepository.findBy({fullName: 'findOne'});
     expect(foundUsers.length).to.be.gt(0);
     expect(foundUsers[0].fullName).to.string('findOne');
   });
 
   it('should delete one document', async () => {
     await userRepository.create(new User({fullName: 'deleteOne'}));
-    await userRepository.deleteOne({fullName: "deleteOne"});
-    const foundUser = await userRepository.findOneBy({fullName: "deleteOne"});
+    await userRepository.deleteOne({fullName: 'deleteOne'});
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteOne'});
     expect(foundUser).to.be.eq(null);
   });
 
@@ -55,14 +55,37 @@ describe('Repository', () => {
     await userRepository.create(new User({fullName: 'deleteMany'}));
     await userRepository.create(new User({fullName: 'deleteMany'}));
     await userRepository.create(new User({fullName: 'deleteManyNotRemoved'}));
-    await userRepository.deleteMany({fullName: "deleteMany"});
-    const foundUsers = await userRepository.findBy({fullName: "deleteMany"});
+    await userRepository.deleteMany({fullName: 'deleteMany'});
+    const foundUsers = await userRepository.findBy({fullName: 'deleteMany'});
     expect(foundUsers).to.be.instanceOf(Array);
     expect(foundUsers.length).to.be.eq(0);
-    const foundUser = await userRepository.findOneBy({fullName: "deleteManyNotRemoved"});
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteManyNotRemoved'});
     if (!foundUser) {
       throw new Error('deleteManyNotRemoved is missing, should be there!');
     }
+  });
+
+  it('should update document', async () => {
+    await userRepository.create(new User({fullName: 'updateOne'}));
+    await userRepository.updateOne({fullName: 'updateOne'}, {age: 29});
+    const foundUser = await userRepository.findOneBy({fullName: 'updateOne'});
+    if (!foundUser) {
+      throw new Error('updateOne is missing, should be there!');
+    }
+
+    expect(foundUser.age).eq(29);
+  });
+
+  it('should update many document', async () => {
+    await userRepository.create(new User({fullName: 'updateMany'}));
+    await userRepository.create(new User({fullName: 'updateMany'}));
+    await userRepository.updateMany({fullName: 'updateMany'}, {age: 29});
+    const foundUsers = await userRepository.findBy({fullName: 'updateMany'});
+    if (!foundUsers) {
+      throw new Error('updateMany is missing, should be there!');
+    }
+
+    expect(foundUsers[0].age).eq(29);
   });
 
 });

@@ -8,6 +8,9 @@ export class User extends BaseDocument {
   @Property()
   public fullName: string;
 
+  @Property()
+  public age: number;
+
   private privateProperty = "hidden";
   public someUserMember = "Hey!";
 
