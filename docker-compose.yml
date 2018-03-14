@@ -5,7 +5,7 @@ services:
     container_name: mongo1
     image: mongo:3.4
     ports:
-      - 34567:27017
+      - 27017:27017
     volumes:
       - mongo1:/data/db
 
