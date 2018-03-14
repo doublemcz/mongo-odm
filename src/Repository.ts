@@ -1,4 +1,4 @@
-import { Collection, Db, FindOneOptions } from 'mongodb';
+import { Collection, CommonOptions, Db, DeleteWriteOpResultObject, FindOneOptions } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 
@@ -41,7 +41,11 @@ export class Repository<T extends BaseDocument> {
    */
   public async findOneBy(where: any = {}, options: FindOneOptions = {}): Promise<T | null> {
     this.checkCollection();
-    let result = await this.collection.findOne(where, options);
+    let result = await this.collection.findOne<T>(where, options);
+    if (!result) {
+      return null;
+    }
+
     return this.mapResultProperties(result);
   }
 
@@ -52,7 +56,11 @@ export class Repository<T extends BaseDocument> {
    */
   public async findOneById(id: string | ObjectID, options: FindOneOptions = {}): Promise<T | null> {
     this.checkCollection();
-    let result = await this.collection.findOne({_id: id}, options);
+    let result = await this.collection.findOne<T>({_id: id}, options);
+    if (!result) {
+      return null;
+    }
+
     return this.mapResultProperties(result);
   }
 
@@ -76,6 +84,28 @@ export class Repository<T extends BaseDocument> {
     }
 
     return result;
+  }
+
+  /**
+   * @param {FilterQuery} filter
+   * @param {FindOneOptions} options
+   * @returns {Promise<[]>}
+   */
+  public async deleteOne(filter: any, options?: CommonOptions ): Promise<DeleteWriteOpResultObject> {
+    this.checkCollection();
+
+    return await this.collection.deleteOne(filter, options);
+  }
+
+  /**
+   * @param {FilterQuery} filter
+   * @param {FindOneOptions} options
+   * @returns {Promise<[]>}
+   */
+  public async deleteMany(filter: any, options?: CommonOptions ): Promise<DeleteWriteOpResultObject> {
+    this.checkCollection();
+
+    return await this.collection.deleteMany(filter, options);
   }
 
   /**
