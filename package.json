@@ -4,10 +4,29 @@
   "description": "Mongo ODB client",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test NODE_CONFIG_DIR=./test mocha -r ts-node/register test/**/*.spec.ts"
+    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "coverage": "nyc npm test"
   },
   "author": "Martin Mika",
   "license": "MIT",
+  "nyc": {
+    "include": [
+      "src/**/*.ts",
+      "test/**/*.spec.ts"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "sourceMap": true,
+    "instrument": true
+  },
   "dependencies": {
     "@types/mongodb": "^3.0.7",
     "mongodb": "^3.0.4",
@@ -20,6 +39,7 @@
     "@types/mocha": "^2.2.48",
     "chai": "^4.1.2",
     "mikro-config": "^1.2.2",
-    "mocha": "^5.0.4"
+    "mocha": "^5.0.4",
+    "nyc": "^11.6.0"
   }
 }
