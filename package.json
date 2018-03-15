@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
     "coverage": "nyc npm test",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
@@ -38,6 +39,7 @@
     "mongodb": "^3.0.4",
     "reflect-metadata": "^0.1.12",
     "ts-node": "^5.0.1",
+    "tslint": "^5.9.1",
     "typescript": "^2.7.2"
   },
   "devDependencies": {

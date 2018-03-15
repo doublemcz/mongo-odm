@@ -26,7 +26,7 @@ export abstract class BaseDocument {
   public toObject(): any {
     const result: any = {};
     const _this = (this as any);
-    for (let property in this.getProperties()) {
+    for (const property in this.getProperties()) {
       result[property] = _this[property];
     }
 

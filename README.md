@@ -16,6 +16,16 @@ yarn add mongo-odm
 
 ```
 
+Append lib to include section in your `tsconfig.json`
+
+```
+{
+ "include": [
+    "node_modules/mongo-odm/src/**/*.ts"
+  ]
+}
+```
+
 
 ## Model
 

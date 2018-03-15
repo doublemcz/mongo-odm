@@ -57,7 +57,7 @@ export class Repository<T extends BaseDocument> {
   public async findOneBy(where: any = {}, options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
 
-    let result = await this.collection.findOne<T>(where, options);
+    const result = await this.collection.findOne<T>(where, options);
     if (!result) {
       return null;
     }
@@ -73,7 +73,7 @@ export class Repository<T extends BaseDocument> {
    */
   public async find(id: string | ObjectID, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
-    let result = await this.collection.findOne<T>({_id: id}, options);
+    const result = await this.collection.findOne<T>({_id: id}, options);
     if (!result) {
       return null;
     }
