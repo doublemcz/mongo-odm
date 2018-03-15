@@ -1,6 +1,12 @@
+import { ObjectId } from 'mongodb';
+
 export abstract class BaseDocument {
 
+  // @TODO find a way how to get rid of this signature
   [key: string]: any;
+
+  // @TODO find way how to put @Property here for all inherited objects
+  _id: ObjectId;
 
   protected static collectionName: string;
 
@@ -8,8 +14,9 @@ export abstract class BaseDocument {
    * @param {Object} properties
    */
   public constructor(properties: any = {}) {
-    for (const property in properties) {
-      this[property] = properties[property];
+    const _this = (this as any);
+    for (const property of Object.keys(properties)) {
+      _this[property] = properties[property];
     }
   }
 
@@ -18,8 +25,9 @@ export abstract class BaseDocument {
    */
   public toObject(): any {
     const result: any = {};
+    const _this = (this as any);
     for (let property in this.getProperties()) {
-      result[property] = this[property];
+      result[property] = _this[property];
     }
 
     return result;

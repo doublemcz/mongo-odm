@@ -104,9 +104,9 @@ export class DocumentManager {
   }
 
   /**
-   * @param {BaseDocument} type
+   * @param {any} type A type of an inherited Document from BaseDocument
    */
-  private createRepository<T extends BaseDocument>(type: BaseDocument) {
+  private createRepository<T extends BaseDocument>(type: any) {
     const repository = new Repository<T>(type, this);
     this.repositories[type.name] = repository;
 

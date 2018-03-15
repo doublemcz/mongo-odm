@@ -32,9 +32,17 @@ export class Repository<T extends BaseDocument> {
   public async create(document: BaseDocument): Promise<BaseDocument> {
     await this.checkCollection();
 
+    if (typeof document.preCreate === 'function') {
+      document.preCreate(this);
+    }
+
     const result = await this.collection.insertOne(document.toObject());
     if (result.insertedId) {
       document._id = result.insertedId;
+    }
+
+    if (typeof document.postCreate === 'function') {
+      document.postCreate(this);
     }
 
     return document;
@@ -62,7 +70,7 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise}
    */
-  public async findOneById(id: string | ObjectID, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
+  public async find(id: string | ObjectID, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
     let result = await this.collection.findOne<T>({_id: id}, options);
     if (!result) {
@@ -102,14 +110,14 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param {FilterQuery} filter
+   * @param document
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async deleteOne(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async delete(document: BaseDocument, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
     await this.checkCollection();
 
-    return await this.collection.deleteOne(filter, options);
+    return await this.collection.deleteOne({_id: document._id}, options);
   }
 
   /**
@@ -117,7 +125,19 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async deleteMany(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async deleteOne(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+    await this.checkCollection();
+    const document = await this.collection.findOne(filter);
+
+    return this.delete(document);
+  }
+
+  /**
+   * @param {FilterQuery} filter
+   * @param {FindOneOptions} options
+   * @returns {Promise<DeleteWriteOpResultObject>}
+   */
+  public async deleteManyNative(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
     await this.checkCollection();
 
     return await this.collection.deleteMany(filter, options);

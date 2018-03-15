@@ -87,10 +87,27 @@ const user = await userRepository.findOneBy({...}, ['log']);
 // user.log[0].eventType
 ```
 
+### Hooks
+We support preCreate and postCreate hooks. They don't need any decorator.
+
+```
+class User extends BaseDocument {
+
+  preCreate(repository: Repository) {
+    this.createdAt = new Date();
+  }
+  
+  postCreate(repository: Repository) {
+    elasticSearch.put(....);
+  }
+}
+
+```
+
 
 ## Missing
 - custom repositories
-- hooks (pre, post)
+- delete and update hooks (pre, post)
 - validations
 - field name translation (custom db fields)
 - possibility to specify where in @OneToOne or @OneToMany

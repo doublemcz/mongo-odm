@@ -25,7 +25,20 @@ export class User extends BaseDocument {
   @OneToOne({type: Car, referencedField: 'user'})
   public car: Car;
 
-  private privateProperty = "hidden";
-  public someUserMember = "Hey!";
+  @Property()
+  public createdAt: Date;
+
+  private privateProperty = 'hidden';
+  public someUserMember = 'Hey!';
+
+  public preCreate() {
+    this.createdAt = new Date();
+  }
+
+  public postCreate() {
+    if (this.fullName === 'postCreate') {
+      this.fullName = 'postCreate Works!';
+    }
+  }
 
 }

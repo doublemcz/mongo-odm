@@ -18,17 +18,31 @@ describe('Repository', () => {
   it('should create document', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = new User();
-    user.fullname = 'Martin Mika';
+    user.fullName = 'Martin Mika';
     await userRepository.create(user);
-    expect(user).to.property('fullname', 'Martin Mika');
-    expect(String(String(user.id))).be.a('string');
+    expect(user).to.property('fullName', 'Martin Mika');
+    expect(String(String(user._id))).be.a('string');
+  });
+
+  it('check preCreate hook', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'Tomas Krejci'}));
+    expect(user.createdAt).to.instanceOf(Date);
+    expect(String(String(user._id))).be.a('string');
+  });
+
+  it('check postCreate hook', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = new User({fullName: 'postCreate'});
+    await userRepository.create(user);
+    expect(String(String(user.fullName))).be.equal('postCreate Works!');
   });
 
   it('should find document from find one by id', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    const user = new User({fullName: 'Martin Mika'});
+    const user = new User({fullName: 'Robert Zaruba'});
     await userRepository.create(user);
-    const foundUser = await userRepository.findOneById(user._id);
+    const foundUser = await userRepository.find(user._id);
     if (foundUser) {
       expect(foundUser.someUserMember).to.equal('Hey!');
     } else {
@@ -38,13 +52,13 @@ describe('Repository', () => {
 
   it('should check oneToMany', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    const user = new User({fullName: 'Martin Mika'});
+    const user = new User({fullName: 'Filip Stowasser'});
     await userRepository.create(user);
     await documentManager
       .getRepository<Log>(Log)
       .create(new Log({eventType: 1, user: user._id}));
 
-    const foundUser = await userRepository.findOneById(user._id, ['log']);
+    const foundUser = await userRepository.find(user._id, ['log']);
     if (foundUser && isArray(foundUser.log) && foundUser.log.length) {
       expect(foundUser.log[0].eventType).eq(1);
     } else {
@@ -54,12 +68,12 @@ describe('Repository', () => {
 
   it('should check oneToOne', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    const user = await userRepository.create(new User({fullName: 'Martin Mika'}));
+    const user = await userRepository.create(new User({fullName: 'Lukas Ruczkowski'}));
     await documentManager
       .getRepository<Car>(Car)
       .create(new Car({brand: 'Skoda', user: user._id}));
 
-    const foundUser = await userRepository.findOneById(user._id, ['car']);
+    const foundUser = await userRepository.find(user._id, ['car']);
     if (foundUser && foundUser.car) {
       expect(foundUser.car.brand).eq('Skoda');
     } else {
@@ -94,11 +108,11 @@ describe('Repository', () => {
 
   it('should delete many document', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    await userRepository.create(new User({fullName: 'deleteMany'}));
-    await userRepository.create(new User({fullName: 'deleteMany'}));
+    await userRepository.create(new User({fullName: 'deleteManyNative'}));
+    await userRepository.create(new User({fullName: 'deleteManyNative'}));
     await userRepository.create(new User({fullName: 'deleteManyNotRemoved'}));
-    await userRepository.deleteMany({fullName: 'deleteMany'});
-    const foundUsers = await userRepository.findBy({fullName: 'deleteMany'});
+    await userRepository.deleteManyNative({fullName: 'deleteManyNative'});
+    const foundUsers = await userRepository.findBy({fullName: 'deleteManyNative'});
     expect(foundUsers).to.be.instanceOf(Array);
     expect(foundUsers.length).to.be.eq(0);
     const foundUser = await userRepository.findOneBy({fullName: 'deleteManyNotRemoved'});
