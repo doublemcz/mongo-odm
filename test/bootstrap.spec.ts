@@ -1,12 +1,10 @@
-import { mongoClientPromise } from './core/connection';
-import { config } from './config/default';
+import { documentManager } from './core/connection';
 
 before(async() => {
-  const mongoClient = await mongoClientPromise;
-  return mongoClient.db(config.odm.database).dropDatabase();
+  return (await documentManager.getDb()).dropDatabase();
 });
 
 after(async () => {
-  const mongoClient = await mongoClientPromise;
-  mongoClient.close();
+  const mongoClient = await documentManager.getMongoClient();
+  await mongoClient.close();
 });

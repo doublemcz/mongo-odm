@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import 'mocha';
-import { userRepository } from './repositories/UserRepository';
 import { User } from './documents/User';
 import { Log } from './documents/Log';
 import { Repository } from '../src/Repository';
@@ -8,13 +7,16 @@ import { documentManager } from './core/connection';
 import { isArray } from 'util';
 import { Car } from './documents/Car';
 
+
 describe('Repository', () => {
 
   it('should check collection name', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     expect(userRepository.getCollectionName()).to.equal('user');
   });
 
   it('should create document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     const user = new User();
     user.fullname = 'Martin Mika';
     await userRepository.create(user);
@@ -23,6 +25,7 @@ describe('Repository', () => {
   });
 
   it('should find document from find one by id', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'Martin Mika'});
     await userRepository.create(user);
     const foundUser = await userRepository.findOneById(user._id);
@@ -34,6 +37,7 @@ describe('Repository', () => {
   });
 
   it('should check oneToMany', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'Martin Mika'});
     await userRepository.create(user);
     await documentManager
@@ -49,6 +53,7 @@ describe('Repository', () => {
   });
 
   it('should check oneToOne', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     const user = await userRepository.create(new User({fullName: 'Martin Mika'}));
     await documentManager
       .getRepository<Car>(Car)
@@ -63,6 +68,7 @@ describe('Repository', () => {
   });
 
   it('should find document from find one', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'findOneBy'});
     await userRepository.create(user);
     const foundUser = await userRepository.findOneBy({fullName: 'findOneBy'});
@@ -70,6 +76,7 @@ describe('Repository', () => {
   });
 
   it('should find array of documents from findBy', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     await userRepository.create(new User({fullName: 'findOne'}));
     await userRepository.create(new User({fullName: 'findOne'}));
     const foundUsers = await userRepository.findBy({fullName: 'findOne'});
@@ -78,6 +85,7 @@ describe('Repository', () => {
   });
 
   it('should delete one document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     await userRepository.create(new User({fullName: 'deleteOne'}));
     await userRepository.deleteOne({fullName: 'deleteOne'});
     const foundUser = await userRepository.findOneBy({fullName: 'deleteOne'});
@@ -85,6 +93,7 @@ describe('Repository', () => {
   });
 
   it('should delete many document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     await userRepository.create(new User({fullName: 'deleteMany'}));
     await userRepository.create(new User({fullName: 'deleteMany'}));
     await userRepository.create(new User({fullName: 'deleteManyNotRemoved'}));
@@ -99,6 +108,7 @@ describe('Repository', () => {
   });
 
   it('should update document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     await userRepository.create(new User({fullName: 'updateOne'}));
     await userRepository.updateOne({fullName: 'updateOne'}, {age: 29});
     const foundUser = await userRepository.findOneBy({fullName: 'updateOne'});
@@ -110,6 +120,7 @@ describe('Repository', () => {
   });
 
   it('should update many document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
     await userRepository.create(new User({fullName: 'updateMany'}));
     await userRepository.create(new User({fullName: 'updateMany'}));
     await userRepository.updateMany({fullName: 'updateMany'}, {age: 29});

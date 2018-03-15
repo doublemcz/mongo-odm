@@ -9,20 +9,28 @@ export class DocumentManager {
   protected documents: any = {};
   /** @type {object} Object with Repositories */
   private repositories: any = {};
+  /** @type {Promise<Db>} */
+  private db: Promise<Db>;
 
   /**
-   * @param {Promise<Db>} db
+   * @param {Promise<Db>} mongoClient
    * @param {DocumentManagerOptions} options
    */
-  public constructor(protected db: Promise<Db>, private options: DocumentManagerOptions) {
+  public constructor(protected mongoClient: Promise<MongoClient>, private options: DocumentManagerOptions) {
     this.registerDocuments();
+    const database = options.database;
+    if (!database) {
+      throw new Error(`You must set 'database' in options`);
+    }
+
+    this.db = this.mongoClient.then(mongoClient => mongoClient.db(database));
   }
 
   /**
    * @param {DocumentManagerOptions} options
    * @returns {Promise<DocumentManager>}
    */
-  public static async create(options: DocumentManagerOptions) {
+  public static create(options: DocumentManagerOptions) {
     if (!options.url) {
       throw new Error(`Please specify 'url' and 'database' in options`);
     }
@@ -31,10 +39,7 @@ export class DocumentManager {
       throw new Error(`Please specify 'url' and 'database' in options`);
     }
 
-    const dbPromise = MongoClient.connect(options.url)
-      .then((mongoClient: MongoClient) => mongoClient.db(options.database));
-
-    return new this(dbPromise, options);
+    return new this(MongoClient.connect(options.url), options);
   }
 
   /**
@@ -42,6 +47,13 @@ export class DocumentManager {
    */
   public getDb(): Promise<Db> {
     return this.db;
+  }
+
+  /**
+   * @returns {Promise<Db>}
+   */
+  public getMongoClient(): Promise<MongoClient> {
+    return this.mongoClient;
   }
 
   /**
@@ -61,7 +73,8 @@ export class DocumentManager {
     }
 
     for (const file of fs.readdirSync(this.options.documentsDir)) {
-      const content = require(this.options.documentsDir + '/' + file);
+      const realPath = fs.realpathSync(this.options.documentsDir + '/' + file);
+      const content = require(realPath);
       for (const index in content) {
         const document = content[index];
         if (document.prototype instanceof BaseDocument) {
@@ -101,7 +114,7 @@ export class DocumentManager {
 
 }
 
-interface DocumentManagerOptions {
+export interface DocumentManagerOptions {
   url?: string,
   database?: string,
   documentsDir?: string;

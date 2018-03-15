@@ -2,7 +2,6 @@ import { Collection, CommonOptions, Db, DeleteWriteOpResultObject, FindOneOption
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
-import { documentManager } from '../test/core/connection';
 
 export class Repository<T extends BaseDocument> {
 
@@ -191,7 +190,7 @@ export class Repository<T extends BaseDocument> {
 
       // You have access to property decorator options here in 'reference'
       const reference = references[populateProperty];
-      const referencedRepository = documentManager.getRepository(reference.type);
+      const referencedRepository = this.documentManager.getRepository(reference.type);
       const where: any = {};
       if (!document._id) {
         throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
