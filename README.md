@@ -124,7 +124,8 @@ const user = await userRepository.findOneBy({...}, ['log']);
 ```
 
 ### Hooks
-We support preCreate and postCreate hooks. They don't need any decorator.
+We support preCreate and postCreate hooks. They don't need any decorator due to 'hardcoded' name for simplicity. 
+If there is such name, repository will call this method.
 
 ```
 class User extends BaseDocument {
