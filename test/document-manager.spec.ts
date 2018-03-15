@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import 'mocha';
-import { DocumentManager } from '../src';
+import { DocumentManager } from '../src/DocumentManager';
 import { Log } from './documents/Log';
 import { config } from './config/default';
 
