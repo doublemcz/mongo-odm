@@ -4,16 +4,16 @@ import { Property } from '../../src/Decorators/Property';
 import { ObjectID } from 'bson';
 import { User } from './User';
 
-@Document({collectionName: 'log'})
-export class Log extends BaseDocument {
+@Document()
+export class Car extends BaseDocument {
 
   @Property()
   public _id: ObjectID;
 
   @Property()
-  eventType: number;
+  public brand: string;
 
   @Property()
-  user: User | string;
+  public user: User | string;
 
 }

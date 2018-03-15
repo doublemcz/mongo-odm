@@ -16,7 +16,7 @@ export abstract class BaseDocument {
   /**
    * @returns {object}
    */
-  toObject(): any {
+  public toObject(): any {
     const result: any = {};
     for (let property in this.getProperties()) {
       if (property == '_id') {

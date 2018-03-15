@@ -1,7 +1,8 @@
 import { Collection, CommonOptions, Db, DeleteWriteOpResultObject, FindOneOptions, ReplaceOneOptions, UpdateWriteOpResult } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
-import { isObject } from 'util';
+import { DocumentManager } from './DocumentManager';
+import { documentManager } from '../test/core/connection';
 
 export class Repository<T extends BaseDocument> {
 
@@ -9,12 +10,14 @@ export class Repository<T extends BaseDocument> {
 
   /**
    * @param {Type} modelType
-   * @param {Promise<Db>} dbPromise
+   * @param {DocumentManager} documentManager
    */
-  public constructor(private modelType: any, private dbPromise: Promise<Db>) {
-    dbPromise.then((db: Db) => {
-      this.collection = db.collection(this.getCollectionName());
-    });
+  public constructor(protected modelType: any, protected documentManager: DocumentManager) {
+    documentManager
+      .getDb()
+      .then((db: Db) => {
+        this.collection = db.collection(this.getCollectionName());
+      });
   }
 
   /**
@@ -27,13 +30,15 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument} document
    */
-  public async create(document: BaseDocument) {
+  public async create(document: BaseDocument): Promise<BaseDocument> {
     await this.checkCollection();
 
     const result = await this.collection.insertOne(document.toObject());
     if (result.insertedId) {
       document._id = result.insertedId;
     }
+
+    return document;
   }
 
   /**
@@ -67,7 +72,7 @@ export class Repository<T extends BaseDocument> {
 
     const document = this.mapResultProperties(result);
     if (populate.length) {
-      this.populateOne(document, populate);
+      await this.populateOne(document, populate);
     }
 
     return document;
@@ -163,9 +168,11 @@ export class Repository<T extends BaseDocument> {
    * @returns {undefined}
    */
   protected async checkCollection() {
-    await this.dbPromise;
+    // We need to wait until the database is initialized
+    await this.documentManager.getDb();
+
     if (!this.collection) {
-      throw new Error('Collection has not been initialized yet');
+      throw new Error('Collection was not initialized properly');
     }
   }
 
@@ -174,12 +181,33 @@ export class Repository<T extends BaseDocument> {
    * @param {string[]} populate
    * @returns {BaseDocument}
    */
-  private populateOne(document: BaseDocument, populate: string[]): BaseDocument {
+  private async populateOne(document: BaseDocument, populate: string[]): Promise<BaseDocument> {
     const odm = document._odm || {};
     const references = odm.references || {};
     for (const populateProperty of populate) {
       if (!references[populateProperty]) {
         throw new Error(`You are trying to populate reference ${populateProperty} that is not in you model with proper decorator.`);
+      }
+
+      // You have access to property decorator options here in 'reference'
+      const reference = references[populateProperty];
+      const referencedRepository = documentManager.getRepository(reference.type);
+      const where: any = {};
+      if (!document._id) {
+        throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
+      }
+
+      if (!reference['referencedField']) {
+        throw new Error(`Reference referenced field is missing. Specify a 'referencedField' in decorator for '${populateProperty}' in ${document.constructor.name}.`);
+      }
+
+      where[reference['referencedField']] = document._id;
+      if (reference.referenceType === 'OneToOne') {
+        document[populateProperty] = await referencedRepository.findOneBy(where)
+      } else if (reference.referenceType === 'OneToMany') {
+        document[populateProperty] = await referencedRepository.findBy(where)
+      } else {
+        throw new Error(`Unsupported reference type: '${reference.referenceType}'. It must be OneToOne or OneToMany`);
       }
     }
 
