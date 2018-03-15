@@ -114,6 +114,11 @@ Also you can delete a document by where:
 userRepository.deleteOneBy({fullName: 'some filter value'});
 ```
 
+### Count
+```
+const usersCount = await userRepository.count();
+const youngUserCount = await userRepository.count({age: 29');
+```
 
 #### Populate
 

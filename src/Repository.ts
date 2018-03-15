@@ -182,6 +182,14 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
+   * @param {object} filter
+   * @returns {Promise<number>}
+   */
+  public async count(filter: any = {}) {
+    return this.collection.count(filter);
+  }
+
+  /**
    * @param {object} result
    * @returns {BaseDocument}
    */

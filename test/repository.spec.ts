@@ -206,4 +206,10 @@ describe('Repository', () => {
     expect(foundUsers[0].age).eq(29);
   });
 
+  it('should count people in repo', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const foundUsersCount = await userRepository.count({age: 29});
+    expect(foundUsersCount).greaterThan(0);
+  });
+
 });
