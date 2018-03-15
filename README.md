@@ -7,7 +7,8 @@
 A typescript ODM based on native node.js Mongo library.
 
 
-### Model
+## Model
+
 ```
 @Document()
 export class User extends BaseDocument {
@@ -28,9 +29,9 @@ export class User extends BaseDocument {
 ```
 
 
-### CRUD
+## CRUD
 
-#### Create
+### Create
 ```
 const userRepository = documentManager.getRepository<User>(User);
 const user = await.userRepository.create(new User({fullName: "Pepa Voprsalek"));
@@ -44,13 +45,38 @@ user2.fullName = "another user";
 await userRepository.create(user2);
 ```
 
+### Retrieve
+
+All find methods returns complete model with all private fields and model methods
+
+```
+const userRepository = documentManager.getRepository<User>(User);
+const user = await userRepository.findOneBy({fullName: 'Foo bar'});
+```
+
+```
+const userRepository = documentManager.getRepository<User>(User);
+const user = await userRepository.findOneById('2312ba029fec9223...');
+```
+
+```
+const userRepository = documentManager.getRepository<User>(User);
+const users = await userRepository.findBy({'fullName': '....'});
+```
+
+#### Populate
+
+```
+const userRepository = documentManager.getRepository<User>(User);
+const user = await userRepository.findOneBy({...}, ['log']);
+// user.log[0].eventType
+```
 
 
-#### Missing for first beta release
+## Missing
 - custom repositories
+- hooks (pre, post)
 - validations
 - field name translation (custom db fields)
-
-#### Future
 - possibility to specify where in @OneToOne or @OneToMany
 - lazy loading on @OneToOne and @OneToMany
