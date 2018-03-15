@@ -62,7 +62,7 @@ await userRepository.create(user2);
 
 ### Retrieve
 
-All find methods returns complete model with all private fields and model methods
+All find methods return complete model with all private fields and model methods
 
 ```
 const userRepository = documentManager.getRepository<User>(User);
