@@ -58,6 +58,16 @@ export class DocumentManager {
   }
 
   /**
+   * @returns {Promise<boolean>}
+   */
+  public async isConnected() {
+    const db = await this.getDb();
+    const client = await this.mongoClient;
+
+    return client.isConnected(db.databaseName);
+  }
+
+  /**
    * @param {string} name
    * @param {BaseDocument} documentType
    */
