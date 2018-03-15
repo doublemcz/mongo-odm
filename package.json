@@ -10,6 +10,10 @@
   },
   "author": "Martin Mika",
   "license": "MIT",
+  "typings": "src/index",
+  "files": [
+    "src/"
+  ],
   "nyc": {
     "include": [
       "src/**/*.ts",
