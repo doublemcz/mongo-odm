@@ -34,11 +34,16 @@ export class User extends BaseDocument {
 First of all you need to create instance of Document Manager
 
 ```
+// Default is localhost
 const documentManager = await DocumentManager.create({
-   url: 'mongodb://localhost:27017/mongo-odm',
    database: 'mongo-odm',
-   documentsDir: '/var/www/app/src/documents'
+   documentsDir: './src/documents'
 });
+
+// You can also specify own url in options for replica set and another parameters (like http auth.)
+{
+  url: 'mongodb://node1,node2:27889,node3/?replicaSet=rs0'
+}
 ```
 
 ### Create

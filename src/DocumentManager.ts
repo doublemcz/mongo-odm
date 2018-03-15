@@ -1,4 +1,4 @@
-import { Db, MongoClient } from 'mongodb';
+import { Db, MongoClient, MongoClientOptions } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import * as fs from 'fs';
 import { Repository } from './Repository';
@@ -28,18 +28,19 @@ export class DocumentManager {
 
   /**
    * @param {DocumentManagerOptions} options
+   * @param {MongoClientOptions} mongoClientOptions
    * @returns {Promise<DocumentManager>}
    */
-  public static create(options: DocumentManagerOptions) {
+  public static create(options: DocumentManagerOptions, mongoClientOptions?: MongoClientOptions) {
     if (!options.url) {
-      throw new Error(`Please specify 'url' and 'database' in options`);
+      options.url = 'mongodb://localhost';
     }
 
     if (!options.database) {
       throw new Error(`Please specify 'url' and 'database' in options`);
     }
 
-    return new this(MongoClient.connect(options.url), options);
+    return new this(MongoClient.connect(options.url, mongoClientOptions), options);
   }
 
   /**
