@@ -126,7 +126,7 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async deleteOne(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async deleteOneBy(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
     await this.checkCollection();
     const document = await this.collection.findOne(filter);
 

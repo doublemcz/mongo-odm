@@ -98,11 +98,35 @@ describe('Repository', () => {
     expect(foundUsers[0].fullName).to.string('findOne');
   });
 
-  it('should delete one document', async () => {
+  it('should delete one by string id', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    await userRepository.create(new User({fullName: 'deleteOne'}));
-    await userRepository.deleteOne({fullName: 'deleteOne'});
-    const foundUser = await userRepository.findOneBy({fullName: 'deleteOne'});
+    const user = await userRepository.create(new User({fullName: 'deleteOneStringId'}));
+    await userRepository.delete(user._id.toHexString());
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteOneStringId'});
+    expect(foundUser).to.be.eq(null);
+  });
+
+  it('should delete one by object id', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'deleteOneObjectId'}));
+    await userRepository.delete(user._id);
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteOneObjectId'});
+    expect(foundUser).to.be.eq(null);
+  });
+
+  it('should delete one by document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'deleteOneDocument'}));
+    await userRepository.delete(user);
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteOneDocument'});
+    expect(foundUser).to.be.eq(null);
+  });
+
+  it('should delete one by where', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    await userRepository.create(new User({fullName: 'deleteOneByWhere'}));
+    await userRepository.deleteOneBy({fullName: 'deleteOneByWhere'});
+    const foundUser = await userRepository.findOneBy({fullName: 'deleteOneByWhere'});
     expect(foundUser).to.be.eq(null);
   });
 

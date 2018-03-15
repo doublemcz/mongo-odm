@@ -95,6 +95,26 @@ Also you can update a document by where:
 userRepository.updateOneBy({fullName: 'some filter value', { fullName: "new fullName"});
 ```
 
+
+### Delete
+```
+// By string id
+userRepository.delete('52acfac010e110a0..');
+// By ObjectId
+userRepository.delete(ObjectId(...));
+
+// By model
+const user = await userRepository.find(...);
+userRepository.delete(user);
+```
+
+Also you can delete a document by where:
+```
+// By ObjectId
+userRepository.deleteOneBy({fullName: 'some filter value'});
+```
+
+
 #### Populate
 
 ```
