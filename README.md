@@ -7,6 +7,27 @@
 A typescript ODM based on native node.js Mongo library.
 
 
+### Model
+```
+@Document()
+export class User extends BaseDocument {
+
+  @Property()
+  public _id: ObjectID;
+
+  @Property()
+  public fullName: string;
+
+  @OneToMany({type: Log, referencedField: 'user'})
+  public log: Log[];
+
+  @OneToOne({type: Car, referencedField: 'user'})
+  public car: Car;
+
+}
+```
+
+
 ### CRUD
 
 #### Create
@@ -27,6 +48,7 @@ await userRepository.create(user2);
 
 #### Missing for first beta release
 - custom repositories
+- validations
 - field name translation (custom db fields)
 
 #### Future
