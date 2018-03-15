@@ -19,11 +19,7 @@ export abstract class BaseDocument {
   public toObject(): any {
     const result: any = {};
     for (let property in this.getProperties()) {
-      if (property == '_id') {
-        result['id'] = this['_id'];
-      } else {
-        result[property] = this[property];
-      }
+      result[property] = this[property];
     }
 
     return result;
