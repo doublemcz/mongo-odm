@@ -77,6 +77,15 @@ const user = await userRepository.findOneById('2312ba029fec9223...');
 const users = await userRepository.findBy({'fullName': '....'});
 ```
 
+
+#### Populate
+
+```
+const userRepository = documentManager.getRepository<User>(User);
+const user = await userRepository.findOneBy({...}, ['log']);
+// user.log[0].eventType
+```
+
 ### Update
 ```
 // By string id
@@ -118,14 +127,6 @@ userRepository.deleteOneBy({fullName: 'some filter value'});
 ```
 const usersCount = await userRepository.count();
 const youngUserCount = await userRepository.count({age: 29');
-```
-
-#### Populate
-
-```
-const userRepository = documentManager.getRepository<User>(User);
-const user = await userRepository.findOneBy({...}, ['log']);
-// user.log[0].eventType
 ```
 
 ### Hooks
