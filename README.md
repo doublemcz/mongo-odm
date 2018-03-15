@@ -6,6 +6,16 @@
 
 A typescript ODM based on native node.js Mongo library.
 
+## Installation 
+```
+npm install --save mong-odm
+
+// or
+
+yarn add mongo-odm
+
+```
+
 
 ## Model
 
