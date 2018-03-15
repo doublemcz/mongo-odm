@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import * as fs from 'fs';
 import { Repository } from './Repository';
@@ -16,6 +16,25 @@ export class DocumentManager {
    */
   public constructor(protected db: Promise<Db>, private options: DocumentManagerOptions) {
     this.registerDocuments();
+  }
+
+  /**
+   * @param {DocumentManagerOptions} options
+   * @returns {Promise<DocumentManager>}
+   */
+  public static async create(options: DocumentManagerOptions) {
+    if (!options.url) {
+      throw new Error(`Please specify 'url' and 'database' in options`);
+    }
+
+    if (!options.database) {
+      throw new Error(`Please specify 'url' and 'database' in options`);
+    }
+
+    const dbPromise = MongoClient.connect(options.url)
+      .then((mongoClient: MongoClient) => mongoClient.db(options.database));
+
+    return new this(dbPromise, options);
   }
 
   /**
@@ -83,5 +102,7 @@ export class DocumentManager {
 }
 
 interface DocumentManagerOptions {
+  url?: string,
+  database?: string,
   documentsDir?: string;
 }

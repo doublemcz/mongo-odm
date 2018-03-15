@@ -3,8 +3,15 @@ import 'mocha';
 import { DocumentManager } from '../src/DocumentManager';
 import { dbPromise } from './core/connection';
 import { Log } from './documents/Log';
+// import { config } from './config/default';
 
 describe('Document manager', () => {
+
+  // Need to rework document manager (from db to connection)
+  // it('check document manager creation', async () => {
+  //   const documentManager = await DocumentManager.create((config.odm as any));
+  //   expect(documentManager).to.be.instanceOf(DocumentManager);
+  // });
 
   it('check documents registration', async () => {
     const documentsDir = process.cwd() + '/test/documents';

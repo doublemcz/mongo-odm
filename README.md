@@ -31,6 +31,16 @@ export class User extends BaseDocument {
 
 ## CRUD
 
+First of all you need to create instance of Document Manager
+
+```
+const documentManager = await DocumentManager.create({
+   url: 'mongodb://localhost:27017/mongo-odm',
+   database: 'mongo-odm',
+   documentsDir: '/var/www/app/src/documents'
+});
+```
+
 ### Create
 ```
 const userRepository = documentManager.getRepository<User>(User);
