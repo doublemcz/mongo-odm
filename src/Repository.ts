@@ -2,6 +2,7 @@ import { Collection, CommonOptions, Db, DeleteWriteOpResultObject, FindOneOption
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
+import { isObject, isString } from 'util';
 
 export class Repository<T extends BaseDocument> {
 
@@ -110,14 +111,14 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param document
+   * @param id
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async delete(document: BaseDocument, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async delete(id: BaseDocument | ObjectID | string, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
     await this.checkCollection();
 
-    return await this.collection.deleteOne({_id: document._id}, options);
+    return await this.collection.deleteOne({_id: this.getId(id)}, options);
   }
 
   /**
@@ -144,15 +145,15 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param {FilterQuery} filter
+   * @param {BaseDocument|ObjectId|string} id
    * @param {object} updateObject
    * @param {FindOneOptions} options
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async updateOne(filter: any, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult> {
+  public async update(id: BaseDocument | ObjectID | string, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult> {
     await this.checkCollection();
 
-    return await this.collection.updateOne(filter, {$set: updateObject}, options);
+    return await this.collection.updateOne({_id: this.getId(id)}, {$set: updateObject}, options);
   }
 
   /**
@@ -161,7 +162,20 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async updateMany(filter: any, updateObject: any, options?: CommonOptions): Promise<UpdateWriteOpResult> {
+  public async updateOneBy(filter: any, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult> {
+    await this.checkCollection();
+    const document = await this.collection.findOne(filter);
+
+    return this.update(document, updateObject);
+  }
+
+  /**
+   * @param {FilterQuery} filter
+   * @param {object} updateObject
+   * @param {FindOneOptions} options
+   * @returns {Promise<UpdateWriteOpResult>}
+   */
+  public async updateManyNative(filter: any, updateObject: any, options?: CommonOptions): Promise<UpdateWriteOpResult> {
     await this.checkCollection();
 
     return await this.collection.updateMany(filter, {$set: updateObject}, options);
@@ -233,4 +247,21 @@ export class Repository<T extends BaseDocument> {
     return document;
   }
 
+  /**
+   * @param {BaseDocument | ObjectID | string} id
+   * @returns {ObjectId}
+   */
+  protected getId(id: BaseDocument | ObjectID | string): ObjectID {
+    if (isString(id)) {
+      return new ObjectID(id);
+    } else if (id instanceof ObjectID) {
+      return id;
+    } else if (id instanceof BaseDocument) {
+      return id._id;
+    } else if (isObject(id)) {
+      return (id as any)._id;
+    }
+
+    throw new Error('Given id is not supported: ' + id);
+  }
 }

@@ -70,13 +70,29 @@ const user = await userRepository.findOneBy({fullName: 'Foo bar'});
 ```
 
 ```
-const userRepository = documentManager.getRepository<User>(User);
 const user = await userRepository.findOneById('2312ba029fec9223...');
 ```
 
 ```
-const userRepository = documentManager.getRepository<User>(User);
 const users = await userRepository.findBy({'fullName': '....'});
+```
+
+### Update
+```
+// By string id
+userRepository.update('52acfac010e110a0..', { fullName: "new fullName"});
+// By ObjectId
+userRepository.update(ObjectId(...), { fullName: "new fullName"});
+
+// By model
+const user = await userRepository.find(...);
+userRepository.update(user, { fullName: "new fullName"});
+```
+
+Also you can update a document by where:
+```
+// By ObjectId
+userRepository.updateOneBy({fullName: 'some filter value', { fullName: "new fullName"});
 ```
 
 #### Populate

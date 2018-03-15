@@ -121,13 +121,49 @@ describe('Repository', () => {
     }
   });
 
-  it('should update document', async () => {
+  it('should update document with id', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    await userRepository.create(new User({fullName: 'updateOne'}));
-    await userRepository.updateOne({fullName: 'updateOne'}, {age: 29});
-    const foundUser = await userRepository.findOneBy({fullName: 'updateOne'});
+    const user = await userRepository.create(new User({fullName: 'updateOneWithId'}));
+    await userRepository.update(user._id, {age: 29});
+    const foundUser = await userRepository.findOneBy({fullName: 'updateOneWithId'});
     if (!foundUser) {
-      throw new Error('updateOne is missing, should be there!');
+      throw new Error('updateOneBy is missing, should be there!');
+    }
+
+    expect(foundUser.age).eq(29);
+  });
+
+  it('should update document with document', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'updateOneWithDocument'}));
+    await userRepository.update(user._id, {age: 29});
+    const foundUser = await userRepository.findOneBy({fullName: 'updateOneWithDocument'});
+    if (!foundUser) {
+      throw new Error('updateOneBy is missing, should be there!');
+    }
+
+    expect(foundUser.age).eq(29);
+  });
+
+  it('should update document with string id', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'updateOneWithStringId'}));
+    await userRepository.update(user._id.toHexString(), {age: 29});
+    const foundUser = await userRepository.findOneBy({fullName: 'updateOneWithStringId'});
+    if (!foundUser) {
+      throw new Error('updateOneBy is missing, should be there!');
+    }
+
+    expect(foundUser.age).eq(29);
+  });
+
+  it('should update document by updateOneBy', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    await userRepository.create(new User({fullName: 'updateOneBy'}));
+    await userRepository.updateOneBy({fullName: 'updateOneBy'}, {age: 29});
+    const foundUser = await userRepository.findOneBy({fullName: 'updateOneBy'});
+    if (!foundUser) {
+      throw new Error('updateOneBy is missing, should be there!');
     }
 
     expect(foundUser.age).eq(29);
@@ -135,12 +171,12 @@ describe('Repository', () => {
 
   it('should update many document', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    await userRepository.create(new User({fullName: 'updateMany'}));
-    await userRepository.create(new User({fullName: 'updateMany'}));
-    await userRepository.updateMany({fullName: 'updateMany'}, {age: 29});
-    const foundUsers = await userRepository.findBy({fullName: 'updateMany'});
+    await userRepository.create(new User({fullName: 'updateManyNative'}));
+    await userRepository.create(new User({fullName: 'updateManyNative'}));
+    await userRepository.updateManyNative({fullName: 'updateManyNative'}, {age: 29});
+    const foundUsers = await userRepository.findBy({fullName: 'updateManyNative'});
     if (!foundUsers) {
-      throw new Error('updateMany is missing, should be there!');
+      throw new Error('updateManyNative is missing, should be there!');
     }
 
     expect(foundUsers[0].age).eq(29);
