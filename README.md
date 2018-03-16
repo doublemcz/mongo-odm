@@ -47,7 +47,7 @@ First of all you need to create instance of Document Manager
 // Default is localhost
 const documentManager = await DocumentManager.create({
    database: 'mongo-odm',
-   documentsDir: './src/documents'
+   documentsDir: './dist/documents' // Documents dir must point dist one
 });
 
 // You can also specify own url in options for replica set and another parameters (like http auth.)
