@@ -2,6 +2,7 @@ import { Db, MongoClient, MongoClientOptions } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import * as fs from 'fs';
 import { Repository } from './Repository';
+import * as path from 'path';
 
 export class DocumentManager {
 
@@ -85,6 +86,10 @@ export class DocumentManager {
 
     for (const file of fs.readdirSync(this.options.documentsDir)) {
       const realPath = fs.realpathSync(this.options.documentsDir + '/' + file);
+      if (-1 === ['.js', '.ts'].indexOf(path.extname(realPath))) {
+        continue;
+      }
+
       const content = require(realPath);
       for (const index in content) {
         const document = content[index];
