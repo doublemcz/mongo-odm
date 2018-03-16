@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 import { User } from './documents/User';
 import { Log } from './documents/Log';
-import { Repository } from '../src/Repository';
+import { Repository } from '../lib/Repository';
 import { documentManager } from './core/connection';
 import { isArray } from 'util';
 import { Car } from './documents/Car';

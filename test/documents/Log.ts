@@ -1,10 +1,8 @@
-import { BaseDocument } from '../../src/BaseDocument';
-import { Document } from '../../src/Decorators/Document';
-import { Property } from '../../src/Decorators/Property';
+import { BaseDocument, Property, Collection } from '../../lib';
 import { ObjectID } from 'bson';
 import { User } from './User';
 
-@Document({collectionName: 'log'})
+@Collection({collectionName: 'log'})
 export class Log extends BaseDocument {
 
   @Property()

@@ -3,7 +3,7 @@
  * @returns {(target: (Function | any)) => Function | any}
  * @constructor
  */
-export function Document(decoratorOptions: any = {}) {
+export function Collection(decoratorOptions: any = {}) {
   return function (target: Function | any) {
     target._odm = target._odm || {};
     if (decoratorOptions) {

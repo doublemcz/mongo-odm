@@ -2,7 +2,8 @@
   "name": "mongo-odm",
   "version": "1.0.6",
   "description": "Mongo ODB client",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
@@ -11,10 +12,6 @@
   },
   "author": "Martin Mika",
   "license": "MIT",
-  "typings": "src/index",
-  "files": [
-    "src/"
-  ],
   "nyc": {
     "include": [
       "src/**/*.ts",

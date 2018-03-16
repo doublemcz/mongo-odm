@@ -1,13 +1,9 @@
-import { BaseDocument } from '../../src/BaseDocument';
-import { Document } from '../../src/Decorators/Document';
-import { Property } from '../../src/Decorators/Property';
-import { OneToMany } from '../../src/Decorators/OneToMany';
-import { OneToOne } from '../../src/Decorators/OneToOne';
+import { BaseDocument, Collection, OneToMany, OneToOne, Property } from '../../lib';
 import { Log } from './Log';
 import { ObjectID } from 'bson';
 import { Car } from './Car';
 
-@Document()
+@Collection()
 export class User extends BaseDocument {
 
   @Property()
