@@ -2,8 +2,10 @@
   "name": "mongo-odm",
   "version": "1.0.8",
   "description": "Mongo ODB client",
-  "main": "lib",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "coverage": "nyc npm test",
@@ -13,7 +15,7 @@
   "license": "MIT",
   "nyc": {
     "include": [
-      "src/**/*.ts",
+      "lib/**/*.ts",
       "test/**/*.spec.ts"
     ],
     "extension": [
