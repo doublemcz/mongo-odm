@@ -17,4 +17,3 @@ exports.Property = function (options) {
         target._odm.properties[key] = __assign({}, options);
     };
 };
-//# sourceMappingURL=Property.js.map

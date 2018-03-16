@@ -21,4 +21,3 @@ exports.OneToMany = function (options) {
         target._odm.references[key] = __assign({}, options);
     };
 };
-//# sourceMappingURL=OneToMany.js.map

@@ -32,4 +32,3 @@ var BaseDocument = /** @class */ (function () {
     return BaseDocument;
 }());
 exports.BaseDocument = BaseDocument;
-//# sourceMappingURL=BaseDocument.js.map

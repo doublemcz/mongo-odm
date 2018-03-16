@@ -19,4 +19,3 @@ function Collection(decoratorOptions) {
     };
 }
 exports.Collection = Collection;
-//# sourceMappingURL=Collection.js.map
