@@ -40,6 +40,7 @@ var BaseDocument_1 = require("./BaseDocument");
 var fs = require("fs");
 var Repository_1 = require("./Repository");
 var path = require("path");
+var util_1 = require("util");
 var DocumentManager = /** @class */ (function () {
     /**
      * @param {Promise<Db>} mongoClient
@@ -143,10 +144,17 @@ var DocumentManager = /** @class */ (function () {
      * @param {BaseDocument} type
      */
     DocumentManager.prototype.getRepository = function (type) {
-        if (this.repositories[type.name]) {
-            return this.repositories[type.name];
+        var identifier;
+        if (util_1.isString(type)) {
+            identifier = type;
         }
-        return this.createRepository(type);
+        else {
+            identifier = type.name;
+        }
+        if (this.repositories[identifier]) {
+            return this.repositories[identifier];
+        }
+        return this.createRepository(this.documents[identifier]);
     };
     /**
      * @param {any} type A type of an inherited Document from BaseDocument

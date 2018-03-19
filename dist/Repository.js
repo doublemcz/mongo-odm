@@ -40,12 +40,12 @@ var bson_1 = require("bson");
 var util_1 = require("util");
 var Repository = /** @class */ (function () {
     /**
-     * @param {Type} modelType
+     * @param {Type} documentType
      * @param {DocumentManager} documentManager
      */
-    function Repository(modelType, documentManager) {
+    function Repository(documentType, documentManager) {
         var _this = this;
-        this.modelType = modelType;
+        this.documentType = documentType;
         this.documentManager = documentManager;
         documentManager
             .getDb()
@@ -57,7 +57,7 @@ var Repository = /** @class */ (function () {
      * @return {string}
      */
     Repository.prototype.getCollectionName = function () {
-        return this.modelType._odm.collectionName;
+        return this.documentType._odm.collectionName;
     };
     /**
      * @param {BaseDocument} document
@@ -240,17 +240,17 @@ var Repository = /** @class */ (function () {
     /**
      * @param {BaseDocument|ObjectId|string} id
      * @param {object} updateObject
-     * @param {FindOneOptions} options
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.update = function (id, updateObject, options) {
+    Repository.prototype.update = function (id, updateObject) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkCollection()];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, this.collection.updateOne({ _id: this.getId(id) }, { $set: updateObject }, options)];
+                        updateObject = this.prepareUpdateObject(updateObject);
+                        return [4 /*yield*/, this.collection.updateOne({ _id: this.getId(id) }, { $set: updateObject })];
                     case 2: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -259,10 +259,9 @@ var Repository = /** @class */ (function () {
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
-     * @param {FindOneOptions} options
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.updateOneBy = function (filter, updateObject, options) {
+    Repository.prototype.updateOneBy = function (filter, updateObject) {
         return __awaiter(this, void 0, void 0, function () {
             var document;
             return __generator(this, function (_a) {
@@ -314,11 +313,22 @@ var Repository = /** @class */ (function () {
      * @returns {BaseDocument}
      */
     Repository.prototype.mapResultProperties = function (result) {
-        var document = new this.modelType();
+        var document = new this.documentType();
         var resultKeys = Object.keys(result);
-        for (var property in document.getProperties()) {
+        for (var property in document.getOdmProperties()) {
             if (resultKeys.indexOf(property) !== -1) {
                 document[property] = result[property];
+            }
+        }
+        var references = document.getOdmReferences() || {};
+        for (var _i = 0, _a = Object.keys(references); _i < _a.length; _i++) {
+            var referenceKey = _a[_i];
+            var reference = references[referenceKey];
+            if (reference.referencedField) {
+                continue;
+            }
+            if (resultKeys.indexOf(referenceKey) !== -1) {
+                document[referenceKey] = result[referenceKey];
             }
         }
         return document;
@@ -351,14 +361,14 @@ var Repository = /** @class */ (function () {
      */
     Repository.prototype.populateOne = function (document, populate) {
         return __awaiter(this, void 0, void 0, function () {
-            var odm, references, _i, populate_1, populateProperty, reference, referencedRepository, where, _a, _b, _c, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var odm, references, _i, populate_1, populateProperty, reference, referencedRepository, where, foundReference, foundReferences, referencedDocuments, _a, foundReferences_1, item;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         odm = document._odm || {};
                         references = odm.references || {};
                         _i = 0, populate_1 = populate;
-                        _e.label = 1;
+                        _b.label = 1;
                     case 1:
                         if (!(_i < populate_1.length)) return [3 /*break*/, 7];
                         populateProperty = populate_1[_i];
@@ -366,29 +376,41 @@ var Repository = /** @class */ (function () {
                             throw new Error("You are trying to populate reference " + populateProperty + " that is not in you model with proper decorator.");
                         }
                         reference = references[populateProperty];
-                        referencedRepository = this.documentManager.getRepository(reference.type);
+                        referencedRepository = this.documentManager.getRepository(reference.targetDocument);
                         where = {};
                         if (!document._id) {
                             throw new Error("Document identifier is missing. The document must have filled '_id'.");
                         }
-                        if (!reference['referencedField']) {
-                            throw new Error("Reference referenced field is missing. Specify a 'referencedField' in decorator for '" + populateProperty + "' in " + document.constructor.name + ".");
+                        if (reference['referencedField']) {
+                            where[reference['referencedField']] = document._id;
                         }
-                        where[reference['referencedField']] = document._id;
+                        else {
+                            if (util_1.isArray(document[populateProperty])) {
+                                where['_id'] = { $in: document[populateProperty] };
+                            }
+                            else {
+                                where['_id'] = document[populateProperty];
+                            }
+                        }
                         if (!(reference.referenceType === 'OneToOne')) return [3 /*break*/, 3];
-                        _a = document;
-                        _b = populateProperty;
                         return [4 /*yield*/, referencedRepository.findOneBy(where)];
                     case 2:
-                        _a[_b] = _e.sent();
+                        foundReference = _b.sent();
+                        if (foundReference) {
+                            document[populateProperty] = new referencedRepository.documentType(foundReference);
+                        }
                         return [3 /*break*/, 6];
                     case 3:
                         if (!(reference.referenceType === 'OneToMany')) return [3 /*break*/, 5];
-                        _c = document;
-                        _d = populateProperty;
                         return [4 /*yield*/, referencedRepository.findBy(where)];
                     case 4:
-                        _c[_d] = _e.sent();
+                        foundReferences = _b.sent();
+                        referencedDocuments = [];
+                        for (_a = 0, foundReferences_1 = foundReferences; _a < foundReferences_1.length; _a++) {
+                            item = foundReferences_1[_a];
+                            referencedDocuments.push(new referencedRepository.documentType(item));
+                        }
+                        document[populateProperty] = referencedDocuments;
                         return [3 /*break*/, 6];
                     case 5: throw new Error("Unsupported reference type: '" + reference.referenceType + "'. It must be OneToOne or OneToMany");
                     case 6:
@@ -417,6 +439,47 @@ var Repository = /** @class */ (function () {
             return id._id;
         }
         throw new Error('Given id is not supported: ' + id);
+    };
+    /**
+     * @param {object} updateObject
+     * @returns {object}
+     */
+    Repository.prototype.prepareUpdateObject = function (updateObject) {
+        var result = {};
+        for (var _i = 0, _a = Object.keys(updateObject); _i < _a.length; _i++) {
+            var key = _a[_i];
+            // Filter unknown properties
+            if (this.documentType.prototype._odm.references[key]) {
+                var reference = this.documentType.prototype._odm.references[key];
+                switch (reference.referenceType) {
+                    case 'OneToMany':
+                        result[key] = this.getEntityIds(updateObject[key]);
+                        break;
+                    default:
+                        throw new Error('Invalid reference type: ' + reference.type);
+                }
+                continue;
+            }
+            if (!this.documentType.prototype._odm.properties[key]) {
+                continue;
+            }
+            result[key] = updateObject[key];
+        }
+        return result;
+    };
+    /**
+     * @param array
+     * @return {ObjectId[]|string[]}
+     */
+    Repository.prototype.getEntityIds = function (array) {
+        var result = [];
+        for (var _i = 0, array_1 = array; _i < array_1.length; _i++) {
+            var item = array_1[_i];
+            if (item._id) {
+                result.push(item._id);
+            }
+        }
+        return result;
     };
     return Repository;
 }());

@@ -14,5 +14,9 @@ export declare abstract class BaseDocument {
     /**
      * @returns {any[]}
      */
-    getProperties(): any;
+    getOdmProperties(): any[];
+    /**
+     * @returns {any[]}
+     */
+    getOdmReferences(): any[];
 }

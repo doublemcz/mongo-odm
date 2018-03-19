@@ -1,16 +1,16 @@
-import { Collection, CommonOptions, DeleteWriteOpResultObject, FindOneOptions, ReplaceOneOptions, UpdateWriteOpResult } from 'mongodb';
+import { Collection, CommonOptions, DeleteWriteOpResultObject, FindOneOptions, UpdateWriteOpResult } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
 export declare class Repository<T extends BaseDocument> {
-    protected modelType: any;
+    protected documentType: any;
     protected documentManager: DocumentManager;
     protected collection: Collection;
     /**
-     * @param {Type} modelType
+     * @param {Type} documentType
      * @param {DocumentManager} documentManager
      */
-    constructor(modelType: any, documentManager: DocumentManager);
+    constructor(documentType: any, documentManager: DocumentManager);
     /**
      * @return {string}
      */
@@ -18,7 +18,7 @@ export declare class Repository<T extends BaseDocument> {
     /**
      * @param {BaseDocument} document
      */
-    create(document: BaseDocument): Promise<BaseDocument>;
+    create(document: T): Promise<T>;
     /**
      * @param {object} where
      * @param {FindOneOptions} options
@@ -59,17 +59,15 @@ export declare class Repository<T extends BaseDocument> {
     /**
      * @param {BaseDocument|ObjectId|string} id
      * @param {object} updateObject
-     * @param {FindOneOptions} options
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(id: BaseDocument | ObjectID | string, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult>;
+    update(id: BaseDocument | ObjectID | string, updateObject: any): Promise<UpdateWriteOpResult>;
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
-     * @param {FindOneOptions} options
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    updateOneBy(filter: any, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult>;
+    updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult>;
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
@@ -102,4 +100,14 @@ export declare class Repository<T extends BaseDocument> {
      * @returns {ObjectId}
      */
     protected getId(id: BaseDocument | ObjectID | string): ObjectID;
+    /**
+     * @param {object} updateObject
+     * @returns {object}
+     */
+    private prepareUpdateObject(updateObject);
+    /**
+     * @param array
+     * @return {ObjectId[]|string[]}
+     */
+    private getEntityIds(array);
 }
