@@ -2,6 +2,7 @@ import { BaseDocument, Collection, OneToMany, OneToOne, Property } from '../../l
 import { Log } from './Log';
 import { ObjectID } from 'bson';
 import { Car } from './Car';
+import { Address } from './Address';
 
 @Collection()
 export class User extends BaseDocument {
@@ -15,11 +16,14 @@ export class User extends BaseDocument {
   @Property({test: 1})
   public age: number;
 
-  @OneToMany({type: Log, referencedField: 'user'})
+  @OneToOne({targetDocument: 'Car', referencedField: 'user'})
+  public car: Car;
+
+  @OneToMany({targetDocument: 'Log', referencedField: 'user'})
   public log: Log[];
 
-  @OneToOne({type: Car, referencedField: 'user'})
-  public car: Car;
+  @OneToMany({targetDocument: 'Address'})
+  public addresses: Address[] | string[] = [];
 
   @Property()
   public createdAt: Date;

@@ -1,18 +1,27 @@
-import { Collection, CommonOptions, Db, DeleteWriteOpResultObject, FindOneOptions, ReplaceOneOptions, UpdateWriteOpResult } from 'mongodb';
+import {
+  Collection,
+  CommonOptions,
+  Db,
+  DeleteWriteOpResultObject,
+  FindOneOptions,
+  ReplaceOneOptions,
+  UpdateWriteOpResult
+} from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
-import { isObject, isString } from 'util';
+import { isArray, isObject, isString } from 'util';
+import { forEachChild } from 'typescript/lib/tsserverlibrary';
 
 export class Repository<T extends BaseDocument> {
 
   protected collection: Collection;
 
   /**
-   * @param {Type} modelType
+   * @param {Type} documentType
    * @param {DocumentManager} documentManager
    */
-  public constructor(protected modelType: any, protected documentManager: DocumentManager) {
+  public constructor(protected documentType: any, protected documentManager: DocumentManager) {
     documentManager
       .getDb()
       .then((db: Db) => {
@@ -24,7 +33,7 @@ export class Repository<T extends BaseDocument> {
    * @return {string}
    */
   public getCollectionName(): string {
-    return this.modelType._odm.collectionName;
+    return this.documentType._odm.collectionName;
   }
 
   /**
@@ -147,22 +156,21 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument|ObjectId|string} id
    * @param {object} updateObject
-   * @param {FindOneOptions} options
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(id: BaseDocument | ObjectID | string, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult> {
+  public async update(id: BaseDocument | ObjectID | string, updateObject: any): Promise<UpdateWriteOpResult> {
     await this.checkCollection();
+    updateObject = this.prepareUpdateObject(updateObject);
 
-    return await this.collection.updateOne({_id: this.getId(id)}, {$set: updateObject}, options);
+    return await this.collection.updateOne({_id: this.getId(id)}, {$set: updateObject});
   }
 
   /**
    * @param {FilterQuery} filter
    * @param {object} updateObject
-   * @param {FindOneOptions} options
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async updateOneBy(filter: any, updateObject: any, options?: ReplaceOneOptions): Promise<UpdateWriteOpResult> {
+  public async updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult> {
     await this.checkCollection();
     const document = await this.collection.findOne(filter);
 
@@ -194,11 +202,23 @@ export class Repository<T extends BaseDocument> {
    * @returns {BaseDocument}
    */
   protected mapResultProperties(result: any): T {
-    const document = new this.modelType();
+    const document = new this.documentType();
     const resultKeys = Object.keys(result);
-    for (const property in document.getProperties()) {
+    for (const property in document.getOdmProperties()) {
       if (resultKeys.indexOf(property) !== -1) {
         document[property] = result[property];
+      }
+    }
+
+    const references = document.getOdmReferences() || {};
+    for (const referenceKey of Object.keys(references)) {
+      const reference = references[referenceKey];
+      if (reference.referencedField) {
+        continue;
+      }
+
+      if (resultKeys.indexOf(referenceKey) !== -1) {
+        document[referenceKey] = result[referenceKey];
       }
     }
 
@@ -232,24 +252,39 @@ export class Repository<T extends BaseDocument> {
 
       // You have access to property decorator options here in 'reference'
       const reference = references[populateProperty];
-      const referencedRepository = this.documentManager.getRepository(reference.type);
+      const referencedRepository = this.documentManager.getRepository(reference.targetDocument);
       const where: any = {};
       if (!document._id) {
         throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
       }
 
-      if (!reference['referencedField']) {
-        throw new Error(`Reference referenced field is missing. Specify a 'referencedField' in decorator for '${populateProperty}' in ${document.constructor.name}.`);
+      if (reference['referencedField']) {
+        where[reference['referencedField']] = document._id;
+      } else {
+        if (isArray(document[populateProperty])) {
+          where['_id'] = {$in: document[populateProperty]};
+        } else {
+          where['_id'] = document[populateProperty];
+        }
       }
 
-      where[reference['referencedField']] = document._id;
       if (reference.referenceType === 'OneToOne') {
-        document[populateProperty] = await referencedRepository.findOneBy(where)
+        const foundReference = await referencedRepository.findOneBy(where);
+        if (foundReference) {
+          document[populateProperty] = new referencedRepository.documentType(foundReference);
+        }
       } else if (reference.referenceType === 'OneToMany') {
-        document[populateProperty] = await referencedRepository.findBy(where)
+        const foundReferences = await referencedRepository.findBy(where);
+        const referencedDocuments: BaseDocument[] = [];
+        for (const item of foundReferences) {
+          referencedDocuments.push(new referencedRepository.documentType(item));
+        }
+
+        document[populateProperty] = referencedDocuments;
       } else {
         throw new Error(`Unsupported reference type: '${reference.referenceType}'. It must be OneToOne or OneToMany`);
       }
+
     }
 
     return document;
@@ -271,5 +306,51 @@ export class Repository<T extends BaseDocument> {
     }
 
     throw new Error('Given id is not supported: ' + id);
+  }
+
+  /**
+   * @param {object} updateObject
+   * @returns {object}
+   */
+  private prepareUpdateObject(updateObject: any) {
+    const result: any = {};
+    for (const key of Object.keys(updateObject)) {
+      // Filter unknown properties
+      if (this.documentType.prototype._odm.references[key]) {
+        const reference = this.documentType.prototype._odm.references[key];
+        switch (reference.referenceType) {
+          case 'OneToMany':
+            result[key] = this.getEntityIds(updateObject[key]);
+            break;
+          default:
+            throw new Error('Invalid reference type: ' + reference.type);
+        }
+
+        continue;
+      }
+
+      if (!this.documentType.prototype._odm.properties[key]) {
+        continue;
+      }
+
+      result[key] = updateObject[key];
+    }
+
+    return result;
+  }
+
+  /**
+   * @param array
+   * @return {ObjectId[]|string[]}
+   */
+  private getEntityIds(array: any) {
+    const result: ObjectID | string[] = [];
+    for (const item of array) {
+      if (item._id) {
+        result.push(item._id);
+      }
+    }
+
+    return result;
   }
 }

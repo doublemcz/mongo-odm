@@ -6,7 +6,7 @@ describe('Model', () => {
 
   it('document properties length should be bigger then 0', async () => {
     const user = new User();
-    const properties = user.getProperties();
+    const properties = user.getOdmProperties();
     expect(Object.keys(properties).length).greaterThan(0);
   });
 

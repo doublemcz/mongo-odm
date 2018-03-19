@@ -26,7 +26,7 @@ export abstract class BaseDocument {
   public toObject(): any {
     const result: any = {};
     const _this = (this as any);
-    for (const property in this.getProperties()) {
+    for (const property in this.getOdmProperties()) {
       result[property] = _this[property];
     }
 
@@ -36,8 +36,15 @@ export abstract class BaseDocument {
   /**
    * @returns {any[]}
    */
-  public getProperties() {
+  public getOdmProperties(): any[] {
     return this._odm.properties;
+  }
+
+  /**
+   * @returns {any[]}
+   */
+  public getOdmReferences(): any[] {
+    return this._odm.references;
   }
 
 }
