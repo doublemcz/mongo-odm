@@ -21,10 +21,11 @@ export declare class Repository<T extends BaseDocument> {
     create(document: T): Promise<T>;
     /**
      * @param {object} where
+     * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise}
      */
-    findOneBy(where?: any, options?: FindOneOptions): Promise<T | null>;
+    findOneBy(where?: any, populate?: string[], options?: FindOneOptions): Promise<T | null>;
     /**
      * @param {string | ObjectID} id
      * @param {string[]} populate
@@ -32,6 +33,13 @@ export declare class Repository<T extends BaseDocument> {
      * @returns {Promise}
      */
     find(id: string | ObjectID, populate?: string[], options?: FindOneOptions): Promise<T | null>;
+    /**
+     *
+     * @param rawData
+     * @param {string[]} populate
+     * @returns {BaseDocument}
+     */
+    private processFindOne(rawData, populate);
     /**
      * @param {FilterQuery} query
      * @param {FindOneOptions} options

@@ -89,14 +89,16 @@ var Repository = /** @class */ (function () {
     };
     /**
      * @param {object} where
+     * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise}
      */
-    Repository.prototype.findOneBy = function (where, options) {
+    Repository.prototype.findOneBy = function (where, populate, options) {
         if (where === void 0) { where = {}; }
+        if (populate === void 0) { populate = []; }
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var result;
+            var rawData;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkCollection()];
@@ -104,11 +106,11 @@ var Repository = /** @class */ (function () {
                         _a.sent();
                         return [4 /*yield*/, this.collection.findOne(where, options)];
                     case 2:
-                        result = _a.sent();
-                        if (!result) {
+                        rawData = _a.sent();
+                        if (!rawData) {
                             return [2 /*return*/, null];
                         }
-                        return [2 /*return*/, this.mapResultProperties(result)];
+                        return [2 /*return*/, this.processFindOne(rawData, populate)];
                 }
             });
         });
@@ -123,7 +125,7 @@ var Repository = /** @class */ (function () {
         if (populate === void 0) { populate = []; }
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var result, document;
+            var rawData;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkCollection()];
@@ -131,17 +133,34 @@ var Repository = /** @class */ (function () {
                         _a.sent();
                         return [4 /*yield*/, this.collection.findOne({ _id: id }, options)];
                     case 2:
-                        result = _a.sent();
-                        if (!result) {
+                        rawData = _a.sent();
+                        if (!rawData) {
                             return [2 /*return*/, null];
                         }
-                        document = this.mapResultProperties(result);
-                        if (!populate.length) return [3 /*break*/, 4];
+                        return [2 /*return*/, this.processFindOne(rawData, populate)];
+                }
+            });
+        });
+    };
+    /**
+     *
+     * @param rawData
+     * @param {string[]} populate
+     * @returns {BaseDocument}
+     */
+    Repository.prototype.processFindOne = function (rawData, populate) {
+        return __awaiter(this, void 0, void 0, function () {
+            var document;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        document = this.mapResultProperties(rawData);
+                        if (!populate.length) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.populateOne(document, populate)];
-                    case 3:
+                    case 1:
                         _a.sent();
-                        _a.label = 4;
-                    case 4: return [2 /*return*/, document];
+                        _a.label = 2;
+                    case 2: return [2 /*return*/, document];
                 }
             });
         });
