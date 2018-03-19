@@ -60,18 +60,19 @@ export class Repository<T extends BaseDocument> {
 
   /**
    * @param {object} where
+   * @param {string[]} populate
    * @param {FindOneOptions} options
    * @returns {Promise}
    */
-  public async findOneBy(where: any = {}, options: FindOneOptions = {}): Promise<T | null> {
+  public async findOneBy(where: any = {}, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
 
-    const result = await this.collection.findOne<T>(where, options);
-    if (!result) {
+    const rawData = await this.collection.findOne<T>(where, options);
+    if (!rawData) {
       return null;
     }
 
-    return this.mapResultProperties(result);
+    return this.processFindOne(rawData, populate);
   }
 
   /**
@@ -82,12 +83,23 @@ export class Repository<T extends BaseDocument> {
    */
   public async find(id: string | ObjectID, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
-    const result = await this.collection.findOne<T>({_id: id}, options);
-    if (!result) {
+
+    const rawData = await this.collection.findOne<T>({_id: id}, options);
+    if (!rawData) {
       return null;
     }
 
-    const document = this.mapResultProperties(result);
+    return this.processFindOne(rawData, populate);
+  }
+
+  /**
+   *
+   * @param rawData
+   * @param {string[]} populate
+   * @returns {BaseDocument}
+   */
+  private async processFindOne(rawData: any, populate: string[]): Promise<T> {
+    const document = this.mapResultProperties(rawData);
     if (populate.length) {
       await this.populateOne(document, populate);
     }
