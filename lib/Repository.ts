@@ -4,14 +4,12 @@ import {
   Db,
   DeleteWriteOpResultObject,
   FindOneOptions,
-  ReplaceOneOptions,
   UpdateWriteOpResult
 } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
 import { isArray, isObject, isString } from 'util';
-import { forEachChild } from 'typescript/lib/tsserverlibrary';
 
 export class Repository<T extends BaseDocument> {
 
