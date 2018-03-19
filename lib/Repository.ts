@@ -30,7 +30,7 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument} document
    */
-  public async create(document: BaseDocument): Promise<BaseDocument> {
+  public async create(document: T): Promise<T> {
     await this.checkCollection();
 
     if (typeof document.preCreate === 'function') {
