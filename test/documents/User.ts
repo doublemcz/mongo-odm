@@ -31,6 +31,10 @@ export class User extends BaseDocument {
     this.createdAt = new Date();
   }
 
+  public testMethod() {
+    return this.fullName;
+  }
+
   public postCreate() {
     if (this.fullName === 'postCreate') {
       this.fullName = 'postCreate Works!';

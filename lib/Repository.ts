@@ -102,9 +102,8 @@ export class Repository<T extends BaseDocument> {
     }
 
     const result: any[] = [];
-    for (const item of resultArray) {
-      this.mapResultProperties(item);
-      result.push(item);
+    for (let item of resultArray) {
+      result.push(this.mapResultProperties(item));
     }
 
     return result;
@@ -190,6 +189,8 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
+   * Returns initialized document with mapped properties
+   *
    * @param {object} result
    * @returns {BaseDocument}
    */

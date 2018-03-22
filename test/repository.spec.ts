@@ -21,21 +21,21 @@ describe('Repository', () => {
     user.fullName = 'Martin Mika';
     await userRepository.create(user);
     expect(user).to.property('fullName', 'Martin Mika');
-    expect(String(String(user._id))).be.a('string');
+    expect(user._id.toHexString()).be.a('string');
   });
 
   it('check preCreate hook', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = await userRepository.create(new User({fullName: 'Tomas Krejci'}));
     expect(user.createdAt).to.instanceOf(Date);
-    expect(String(String(user._id))).be.a('string');
+    expect(user._id.toHexString()).be.a('string');
   });
 
   it('check postCreate hook', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'postCreate'});
     await userRepository.create(user);
-    expect(String(String(user.fullName))).be.equal('postCreate Works!');
+    expect(user.fullName).be.equal('postCreate Works!');
   });
 
   it('should find document from find one by id', async () => {
@@ -96,6 +96,14 @@ describe('Repository', () => {
     const foundUsers = await userRepository.findBy({fullName: 'findOne'});
     expect(foundUsers.length).to.be.gt(0);
     expect(foundUsers[0].fullName).to.string('findOne');
+  });
+
+  it('should check correct document type creation from findBy', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    await userRepository.create(new User({fullName: 'findOneCorrectDocument'}));
+    const foundUsers = await userRepository.findBy({fullName: 'findOneCorrectDocument'});
+    expect(foundUsers.length).to.be.gt(0);
+    expect(foundUsers[0].testMethod).to.be.a('function');
   });
 
   it('should delete one by string id', async () => {

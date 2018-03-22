@@ -172,8 +172,7 @@ var Repository = /** @class */ (function () {
                         result = [];
                         for (_i = 0, resultArray_1 = resultArray; _i < resultArray_1.length; _i++) {
                             item = resultArray_1[_i];
-                            this.mapResultProperties(item);
-                            result.push(item);
+                            result.push(this.mapResultProperties(item));
                         }
                         return [2 /*return*/, result];
                 }
@@ -310,6 +309,8 @@ var Repository = /** @class */ (function () {
         });
     };
     /**
+     * Returns initialized document with mapped properties
+     *
      * @param {object} result
      * @returns {BaseDocument}
      */

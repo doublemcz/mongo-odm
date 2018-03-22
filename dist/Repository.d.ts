@@ -83,6 +83,8 @@ export declare class Repository<T extends BaseDocument> {
      */
     count(filter?: any): Promise<number>;
     /**
+     * Returns initialized document with mapped properties
+     *
      * @param {object} result
      * @returns {BaseDocument}
      */
