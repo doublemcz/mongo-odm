@@ -3,6 +3,7 @@ import { BaseDocument } from './BaseDocument';
 import * as fs from 'fs';
 import { Repository } from './Repository';
 import * as path from 'path';
+import { isString } from 'util';
 
 export class DocumentManager {
 
@@ -111,11 +112,18 @@ export class DocumentManager {
    * @param {BaseDocument} type
    */
   public getRepository<T extends BaseDocument>(type: any): Repository<T> {
-    if (this.repositories[type.name]) {
-      return this.repositories[type.name];
+    let identifier;
+    if (isString(type)) {
+      identifier = type;
+    } else {
+      identifier = type.name;
     }
 
-    return this.createRepository<T>(type);
+    if (this.repositories[identifier]) {
+      return this.repositories[identifier];
+    }
+
+    return this.createRepository<T>(this.documents[identifier]);
   }
 
   /**

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 import { User } from './documents/User';
 import { Log } from './documents/Log';
-import { Repository } from '../lib/Repository';
+import { Repository } from '../lib';
 import { documentManager } from './core/connection';
 import { isArray } from 'util';
 import { Car } from './documents/Car';
@@ -47,37 +47,6 @@ describe('Repository', () => {
       expect(foundUser.someUserMember).to.equal('Hey!');
     } else {
       throw new Error('findOnById returned nothing');
-    }
-  });
-
-  it('should check oneToMany', async () => {
-    const userRepository = documentManager.getRepository<User>(User);
-    const user = new User({fullName: 'Filip Stowasser'});
-    await userRepository.create(user);
-    await documentManager
-      .getRepository<Log>(Log)
-      .create(new Log({eventType: 1, user: user._id}));
-
-    const foundUser = await userRepository.find(user._id, ['log']);
-    if (foundUser && isArray(foundUser.log) && foundUser.log.length) {
-      expect(foundUser.log[0].eventType).eq(1);
-    } else {
-      throw new Error('findOnById didn\'t returned log array at all');
-    }
-  });
-
-  it('should check oneToOne', async () => {
-    const userRepository = documentManager.getRepository<User>(User);
-    const user = await userRepository.create(new User({fullName: 'Lukas Ruczkowski'}));
-    await documentManager
-      .getRepository<Car>(Car)
-      .create(new Car({brand: 'Skoda', user: user._id}));
-
-    const foundUser = await userRepository.find(user._id, ['car']);
-    if (foundUser && foundUser.car) {
-      expect(foundUser.car.brand).eq('Skoda');
-    } else {
-      throw new Error('findOnById didn\'t returned car at all');
     }
   });
 

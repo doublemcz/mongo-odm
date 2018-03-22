@@ -18,7 +18,7 @@ var BaseDocument = /** @class */ (function () {
     BaseDocument.prototype.toObject = function () {
         var result = {};
         var _this = this;
-        for (var property in this.getProperties()) {
+        for (var property in this.getOdmProperties()) {
             result[property] = _this[property];
         }
         return result;
@@ -26,8 +26,14 @@ var BaseDocument = /** @class */ (function () {
     /**
      * @returns {any[]}
      */
-    BaseDocument.prototype.getProperties = function () {
+    BaseDocument.prototype.getOdmProperties = function () {
         return this._odm.properties;
+    };
+    /**
+     * @returns {any[]}
+     */
+    BaseDocument.prototype.getOdmReferences = function () {
+        return this._odm.references;
     };
     return BaseDocument;
 }());

@@ -1,4 +1,4 @@
-import { BaseDocument, Property, Collection } from '../../lib';
+import { BaseDocument, Property, Collection, OneToOne } from '../../lib';
 import { ObjectID } from 'bson';
 import { User } from './User';
 
@@ -11,7 +11,7 @@ export class Car extends BaseDocument {
   @Property()
   public brand: string;
 
-  @Property()
+  @OneToOne({targetDocument: 'User'})
   public user: User | string;
 
 }
