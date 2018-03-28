@@ -75,4 +75,25 @@ describe('Relations', () => {
     expect(foundUser.addresses[0]).to.be.instanceOf(Address);
   });
 
+  it('should check populate oneToOne from findBy one by reference field', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const carsRepository = documentManager.getRepository<Car>(Car);
+    const user = await userRepository.create(new User({fullName: 'findByPopulateOneToOneReferenceField'}));
+    await carsRepository.create(new Car({brand: 'Bugatka', user: user._id}));
+    const foundUsers = await userRepository.findBy({fullName: 'findByPopulateOneToOneReferenceField'}, ['car']);
+    expect(foundUsers.length).to.be.eq(1);
+    expect(foundUsers[0].car.brand).to.string('Bugatka');
+  });
+
+  it('should check populate oneToMany from findBy one by reference field', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const logRepository = documentManager.getRepository<Log>(Log);
+    const user = await userRepository.create(new User({fullName: 'findByPopulateOneToManyReferenceField'}));
+    await logRepository.create(new Log({eventType: 1, user: user._id }));
+    const foundUsers = await userRepository.findBy({fullName: 'findByPopulateOneToManyReferenceField'}, ['log']);
+    expect(foundUsers.length).to.be.eq(1);
+    expect(foundUsers[0].log.length).to.be.eq(1);
+    expect(foundUsers[0].log[0].eventType).to.be.eq(1);
+  });
+
 });

@@ -107,10 +107,11 @@ export class Repository<T extends BaseDocument> {
 
   /**
    * @param {FilterQuery} query
+   * @param {string[]} populate
    * @param {FindOneOptions} options
    * @returns {Promise<[]>}
    */
-  public async findBy(query: any, options: FindOneOptions = {}): Promise<T[]> {
+  public async findBy(query: any, populate: string[] = [], options: FindOneOptions = {}): Promise<T[]> {
     await this.checkCollection();
 
     // @TODO find out why `find` is @deprecated
@@ -123,6 +124,10 @@ export class Repository<T extends BaseDocument> {
     const result: any[] = [];
     for (let item of resultArray) {
       result.push(this.mapResultProperties(item));
+    }
+
+    if (populate.length) {
+      await this.populateMany(result, populate);
     }
 
     return result;
@@ -265,13 +270,16 @@ export class Repository<T extends BaseDocument> {
       const reference = references[populateProperty];
       const referencedRepository = this.documentManager.getRepository(reference.targetDocument);
       const where: any = {};
-      if (!document._id) {
-        throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
-      }
 
       if (reference['referencedField']) {
+        // You don't own join property - it is in related table
+        if (!document._id) {
+          throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
+        }
+
         where[reference['referencedField']] = document._id;
       } else {
+        // You have related ids in your collection
         if (isArray(document[populateProperty])) {
           where['_id'] = {$in: document[populateProperty]};
         } else {
@@ -299,6 +307,86 @@ export class Repository<T extends BaseDocument> {
     }
 
     return document;
+  }
+
+  /**
+   * @param {BaseDocument[]} documents
+   * @param {string[]} populate
+   * @returns {BaseDocument}
+   */
+  private async populateMany(documents: BaseDocument[], populate: string[]): Promise<BaseDocument[]> {
+    if (!documents.length) {
+      return documents;
+    }
+
+    const odm = documents[0]._odm || {};
+    const references = odm.references || {};
+    const mappedDocumentsById: any = {};
+    documents.forEach(document => {
+      mappedDocumentsById[document._id.toHexString()] = document;
+    });
+
+    for (const populateProperty of populate) {
+      if (!references[populateProperty]) {
+        throw new Error(`You are trying to populate reference ${populateProperty} that is not in you model with proper decorator.`);
+      }
+
+      // You have access to property decorator options here in 'referenceMetadata'
+      const referenceMetadata = references[populateProperty];
+      const referencedField = referenceMetadata['referencedField'] || null;
+      const referencedRepository = this.documentManager.getRepository(referenceMetadata.targetDocument);
+      const where: any = {};
+
+      if (referenceMetadata['referencedField']) {
+        // You don't own join property - it is in related table
+        where[referenceMetadata['referencedField']] = {$in: documents.map(document => document._id)};
+      } else {
+        // You have related ids in you collection
+        // @TODO
+        // if (isArray(documents[0][populateProperty])) {
+        //   where['_id'] = {$in: document[populateProperty]};
+        // } else {
+        //   where['_id'] = document[populateProperty];
+        // }
+      }
+
+      if (referencedField) {
+        const referencedDocuments = await referencedRepository.findBy(where);
+        if (!referencedDocuments) {
+          continue;
+        }
+
+        if (referenceMetadata.referenceType === 'OneToOne') {
+          referencedDocuments.forEach(referencedDocument => {
+            const documentId = referencedDocument[referencedField].toHexString();
+            mappedDocumentsById[documentId][populateProperty] = referencedDocument;
+          });
+        } else if (referenceMetadata.referenceType === 'OneToMany') {
+          const mappedReferencesById: any = {};
+          referencedDocuments.forEach(referencedData => {
+            // Instantiate document with raw data and map it to object by its id
+            mappedReferencesById[referencedData._id.toHexString()] = new referencedRepository.documentType(referencedData);
+          });
+
+          for (const foundReference of referencedDocuments) {
+            const documentId = foundReference[referencedField].toHexString();
+            let destination: any = mappedDocumentsById[documentId][populateProperty];
+            if (!(destination instanceof ArrayCollection)) {
+              destination = mappedDocumentsById[documentId][populateProperty] = new ArrayCollection();
+            }
+
+            destination.push(foundReference);
+          }
+        } else {
+          throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
+        }
+      } else {
+        throw new Error('Not implemented! Only referenced fields are supported.');
+      }
+
+    }
+
+    return documents;
   }
 
   /**
@@ -364,4 +452,8 @@ export class Repository<T extends BaseDocument> {
 
     return result;
   }
+}
+
+class ArrayCollection extends Array {
+  // Just helper collection
 }
