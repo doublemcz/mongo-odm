@@ -1,4 +1,14 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -64,7 +74,7 @@ var Repository = /** @class */ (function () {
      */
     Repository.prototype.create = function (document) {
         return __awaiter(this, void 0, void 0, function () {
-            var result;
+            var filteredObject, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkCollection()];
@@ -73,7 +83,8 @@ var Repository = /** @class */ (function () {
                         if (typeof document.preCreate === 'function') {
                             document.preCreate(this);
                         }
-                        return [4 /*yield*/, this.collection.insertOne(document.toObject())];
+                        filteredObject = this.prepareObjectForSave(document);
+                        return [4 /*yield*/, this.collection.insertOne(filteredObject)];
                     case 2:
                         result = _a.sent();
                         if (result.insertedId) {
@@ -167,10 +178,12 @@ var Repository = /** @class */ (function () {
     };
     /**
      * @param {FilterQuery} query
+     * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise<[]>}
      */
-    Repository.prototype.findBy = function (query, options) {
+    Repository.prototype.findBy = function (query, populate, options) {
+        if (populate === void 0) { populate = []; }
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var resultCursor, resultArray, result, _i, resultArray_1, item;
@@ -193,7 +206,12 @@ var Repository = /** @class */ (function () {
                             item = resultArray_1[_i];
                             result.push(this.mapResultProperties(item));
                         }
-                        return [2 /*return*/, result];
+                        if (!populate.length) return [3 /*break*/, 5];
+                        return [4 /*yield*/, this.populateMany(result, populate)];
+                    case 4:
+                        _a.sent();
+                        _a.label = 5;
+                    case 5: return [2 /*return*/, result];
                 }
             });
         });
@@ -267,7 +285,7 @@ var Repository = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.checkCollection()];
                     case 1:
                         _a.sent();
-                        updateObject = this.prepareUpdateObject(updateObject);
+                        updateObject = this.prepareObjectForSave(updateObject);
                         return [4 /*yield*/, this.collection.updateOne({ _id: this.getId(id) }, { $set: updateObject })];
                     case 2: return [2 /*return*/, _a.sent()];
                 }
@@ -398,13 +416,15 @@ var Repository = /** @class */ (function () {
                         reference = references[populateProperty];
                         referencedRepository = this.documentManager.getRepository(reference.targetDocument);
                         where = {};
-                        if (!document._id) {
-                            throw new Error("Document identifier is missing. The document must have filled '_id'.");
-                        }
                         if (reference['referencedField']) {
+                            // You don't own join property - it is in related table
+                            if (!document._id) {
+                                throw new Error("Document identifier is missing. The document must have filled '_id'.");
+                            }
                             where[reference['referencedField']] = document._id;
                         }
                         else {
+                            // You have related ids in your collection
                             if (util_1.isArray(document[populateProperty])) {
                                 where['_id'] = { $in: document[populateProperty] };
                             }
@@ -442,6 +462,161 @@ var Repository = /** @class */ (function () {
         });
     };
     /**
+     * @param {BaseDocument[]} documents
+     * @param {string[]} populate
+     * @returns {BaseDocument}
+     */
+    Repository.prototype.populateMany = function (documents, populate) {
+        return __awaiter(this, void 0, void 0, function () {
+            var odm, references, mappedDocumentsById, _loop_1, this_1, _i, populate_2, populateProperty;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!documents.length) {
+                            return [2 /*return*/, documents];
+                        }
+                        odm = documents[0]._odm || {};
+                        references = odm.references || {};
+                        mappedDocumentsById = {};
+                        documents.forEach(function (document) {
+                            mappedDocumentsById[document._id.toHexString()] = document;
+                        });
+                        _loop_1 = function (populateProperty) {
+                            var referenceMetadata, referencedField, referencedRepository, where, referencedDocuments, _i, referencedDocuments_1, foundReference, documentId, destination, mappedReferencesById_1;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (!references[populateProperty]) {
+                                            throw new Error("You are trying to populate reference " + populateProperty + " that is not in you model with proper decorator.");
+                                        }
+                                        referenceMetadata = references[populateProperty];
+                                        referencedField = referenceMetadata['referencedField'] || null;
+                                        referencedRepository = this_1.documentManager.getRepository(referenceMetadata.targetDocument);
+                                        where = this_1.createWhereForPopulationFindBy(populateProperty, referencedField, documents);
+                                        if (!Object.keys(where).length) {
+                                            return [2 /*return*/, "continue"];
+                                        }
+                                        return [4 /*yield*/, referencedRepository.findBy(where)];
+                                    case 1:
+                                        referencedDocuments = _a.sent();
+                                        if (!referencedDocuments.length) {
+                                            return [2 /*return*/, "continue"];
+                                        }
+                                        if (referencedField) {
+                                            if (referenceMetadata.referenceType === 'OneToOne') {
+                                                referencedDocuments.forEach(function (referencedDocument) {
+                                                    var documentId = referencedDocument[referencedField].toHexString();
+                                                    mappedDocumentsById[documentId][populateProperty] = referencedDocument;
+                                                });
+                                            }
+                                            else if (referenceMetadata.referenceType === 'OneToMany') {
+                                                for (_i = 0, referencedDocuments_1 = referencedDocuments; _i < referencedDocuments_1.length; _i++) {
+                                                    foundReference = referencedDocuments_1[_i];
+                                                    documentId = foundReference[referencedField].toHexString();
+                                                    destination = mappedDocumentsById[documentId][populateProperty];
+                                                    if (!(destination instanceof ArrayCollection)) {
+                                                        destination = mappedDocumentsById[documentId][populateProperty] = new ArrayCollection();
+                                                    }
+                                                    destination.push(foundReference);
+                                                }
+                                            }
+                                            else {
+                                                throw new Error("Unsupported reference type: '" + referenceMetadata.referenceType + "'. It must be OneToOne or OneToMany");
+                                            }
+                                        }
+                                        else {
+                                            mappedReferencesById_1 = this_1.initAndMapById(referencedRepository.documentType, referencedDocuments);
+                                            if (referenceMetadata.referenceType === 'OneToOne') {
+                                                documents.forEach(function (document) {
+                                                    document[populateProperty] = mappedReferencesById_1[document[populateProperty]];
+                                                });
+                                            }
+                                            else if (referenceMetadata.referenceType === 'OneToMany') {
+                                                documents.forEach(function (document) {
+                                                    if (!document[populateProperty] || !util_1.isArray(document[populateProperty]) || !document[populateProperty].length) {
+                                                        return;
+                                                    }
+                                                    var newArray = new ArrayCollection();
+                                                    document[populateProperty].forEach(function (referenceId) {
+                                                        newArray.push(mappedReferencesById_1[referenceId.toHexString()]);
+                                                    });
+                                                    document[populateProperty] = newArray;
+                                                });
+                                            }
+                                            else {
+                                                throw new Error("Unsupported reference type: '" + referenceMetadata.referenceType + "'. It must be OneToOne or OneToMany");
+                                            }
+                                        }
+                                        return [2 /*return*/];
+                                }
+                            });
+                        };
+                        this_1 = this;
+                        _i = 0, populate_2 = populate;
+                        _a.label = 1;
+                    case 1:
+                        if (!(_i < populate_2.length)) return [3 /*break*/, 4];
+                        populateProperty = populate_2[_i];
+                        return [5 /*yield**/, _loop_1(populateProperty)];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/, documents];
+                }
+            });
+        });
+    };
+    /**
+     * @param {string} populateProperty
+     * @param {string} referencedField
+     * @param {BaseDocument[]} documents
+     * @return {any}
+     */
+    Repository.prototype.createWhereForPopulationFindBy = function (populateProperty, referencedField, documents) {
+        var where = {};
+        if (referencedField) {
+            // You don't own join property - it is in related table
+            where[referencedField] = { $in: documents.map(function (document) { return document._id; }) };
+        }
+        else {
+            var ids_1 = [];
+            documents.forEach(function (document) {
+                if (!document[populateProperty]) {
+                    return;
+                }
+                if (util_1.isArray(document[populateProperty])) {
+                    // OneToMany
+                    document[populateProperty].forEach(function (id) { return ids_1.push(id); });
+                }
+                else {
+                    // OneToOne
+                    ids_1.push(document[populateProperty]);
+                }
+            });
+            if (!ids_1.length) {
+                return where;
+            }
+            where['_id'] = { $in: ids_1 };
+        }
+        return where;
+    };
+    /**
+     * @param {Function} documentType
+     * @param {any[]} referencedDocuments
+     * @return {any}
+     */
+    Repository.prototype.initAndMapById = function (documentType, referencedDocuments) {
+        var mapped = {};
+        referencedDocuments.forEach(function (referencedData) {
+            // Instantiate document with raw data and map it to object by its id
+            mapped[referencedData._id.toHexString()] = new documentType(referencedData);
+        });
+        return mapped;
+    };
+    /**
      * @param {BaseDocument | ObjectID | string} id
      * @returns {ObjectId}
      */
@@ -461,29 +636,32 @@ var Repository = /** @class */ (function () {
         throw new Error('Given id is not supported: ' + id);
     };
     /**
-     * @param {object} updateObject
+     * @param {object} objectToBeSaved
      * @returns {object}
      */
-    Repository.prototype.prepareUpdateObject = function (updateObject) {
+    Repository.prototype.prepareObjectForSave = function (objectToBeSaved) {
         var result = {};
-        for (var _i = 0, _a = Object.keys(updateObject); _i < _a.length; _i++) {
+        for (var _i = 0, _a = Object.keys(objectToBeSaved); _i < _a.length; _i++) {
             var key = _a[_i];
             // Filter unknown properties
             if (this.documentType.prototype._odm.references[key]) {
                 var reference = this.documentType.prototype._odm.references[key];
                 switch (reference.referenceType) {
+                    case 'OneToOne':
+                        result[key] = this.getId(objectToBeSaved[key]);
+                        break;
                     case 'OneToMany':
-                        result[key] = this.getEntityIds(updateObject[key]);
+                        result[key] = this.getEntityIds(objectToBeSaved[key]);
                         break;
                     default:
-                        throw new Error('Invalid reference type: ' + reference.type);
+                        throw new Error('Invalid reference type: ' + reference.referenceType + ' | ' + JSON.stringify(reference));
                 }
                 continue;
             }
             if (!this.documentType.prototype._odm.properties[key]) {
                 continue;
             }
-            result[key] = updateObject[key];
+            result[key] = objectToBeSaved[key];
         }
         return result;
     };
@@ -504,3 +682,10 @@ var Repository = /** @class */ (function () {
     return Repository;
 }());
 exports.Repository = Repository;
+var ArrayCollection = /** @class */ (function (_super) {
+    __extends(ArrayCollection, _super);
+    function ArrayCollection() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return ArrayCollection;
+}(Array));

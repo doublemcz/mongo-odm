@@ -42,10 +42,11 @@ export declare class Repository<T extends BaseDocument> {
     private processFindOne(rawData, populate);
     /**
      * @param {FilterQuery} query
+     * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise<[]>}
      */
-    findBy(query: any, options?: FindOneOptions): Promise<T[]>;
+    findBy(query: any, populate?: string[], options?: FindOneOptions): Promise<T[]>;
     /**
      * @param id
      * @param {FindOneOptions} options
@@ -106,15 +107,34 @@ export declare class Repository<T extends BaseDocument> {
      */
     private populateOne(document, populate);
     /**
+     * @param {BaseDocument[]} documents
+     * @param {string[]} populate
+     * @returns {BaseDocument}
+     */
+    private populateMany(documents, populate);
+    /**
+     * @param {string} populateProperty
+     * @param {string} referencedField
+     * @param {BaseDocument[]} documents
+     * @return {any}
+     */
+    private createWhereForPopulationFindBy(populateProperty, referencedField, documents);
+    /**
+     * @param {Function} documentType
+     * @param {any[]} referencedDocuments
+     * @return {any}
+     */
+    private initAndMapById(documentType, referencedDocuments);
+    /**
      * @param {BaseDocument | ObjectID | string} id
      * @returns {ObjectId}
      */
     protected getId(id: BaseDocument | ObjectID | string): ObjectID;
     /**
-     * @param {object} updateObject
+     * @param {object} objectToBeSaved
      * @returns {object}
      */
-    private prepareUpdateObject(updateObject);
+    private prepareObjectForSave(objectToBeSaved);
     /**
      * @param array
      * @return {ObjectId[]|string[]}
