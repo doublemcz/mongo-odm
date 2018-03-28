@@ -45,14 +45,14 @@ describe('Relations', () => {
     }
   });
 
-  it('should check oneToMany without reference field', async () => {
+  it('should check oneToMany without reference field - update', async () => {
     const userRepository = documentManager.getRepository<User>(User);
-    const logRepository = documentManager.getRepository<Address>(Address);
+    const addressRepository = documentManager.getRepository<Address>(Address);
 
     const user = await userRepository.create(new User({fullName: 'Zla Chripka'}));
-    const city1 = await logRepository.create(new Address({street: 'a street', city: 'Prague'}));
-    const city2 = await logRepository.create(new Address({street: 'a street', city: 'Brno'}));
-
+    const city1 = await addressRepository.create(new Address({street: 'a street', city: 'Prague'}));
+    const city2 = await addressRepository.create(new Address({street: 'a street', city: 'Brno'}));
+    user.addresses = [];
     (user.addresses as Address[]).push(city1, city2);
     await userRepository.update(user, {addresses: user.addresses});
 
@@ -94,6 +94,35 @@ describe('Relations', () => {
     expect(foundUsers.length).to.be.eq(1);
     expect(foundUsers[0].log.length).to.be.eq(1);
     expect(foundUsers[0].log[0].eventType).to.be.eq(1);
+  });
+
+  it('should check populate oneToOne from findBy one with owning joining property', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const addressRepository = documentManager.getRepository<Address>(Address);
+    const address = await addressRepository.create(new Address({street: 'a street', city: 'Abrakadabra'}));
+    await userRepository.create(new User({fullName: 'findByPopulateOneToOneNotReferenceField', address: address._id}));
+    const foundUsers = await userRepository.findBy({fullName: 'findByPopulateOneToOneNotReferenceField'}, ['address']);
+    expect(foundUsers.length).to.be.eq(1);
+    expect(foundUsers[0].address).to.be.instanceOf(Address);
+  });
+
+  it('should check populate oneToMany from findBy one with owning joining property', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const addressRepository = documentManager.getRepository<Address>(Address);
+    const address = await addressRepository.create(new Address({street: 'a street', city: 'Abrakadabra'}));
+    const address2 = await addressRepository.create(new Address({street: 'a street', city: 'Abrakadabra 2'}));
+    const user = new User({
+      fullName: 'findByPopulateOneToManyNotReferenceField',
+      addresses: [address, address2]
+    });
+
+    await userRepository.create(user);
+    const foundUsers = await userRepository.findBy({fullName: 'findByPopulateOneToManyNotReferenceField'}, ['addresses']);
+    expect(foundUsers.length).to.be.eq(1);
+    expect(foundUsers[0].addresses.length).to.be.eq(2);
+    expect(foundUsers[0].addresses[0]).to.be.instanceOf(Address);
+    expect(foundUsers[0].addresses[1]).to.be.instanceOf(Address);
+    expect((foundUsers[0].addresses[1] as Address).city).to.be.string('Abrakadabra 2');
   });
 
 });

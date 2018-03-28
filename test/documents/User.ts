@@ -22,8 +22,11 @@ export class User extends BaseDocument {
   @OneToMany({targetDocument: 'Log', referencedField: 'user'})
   public log: Log[];
 
+  @OneToOne({targetDocument: 'Address'})
+  public address: Address | ObjectID;
+
   @OneToMany({targetDocument: 'Address'})
-  public addresses: Address[] | string[] = [];
+  public addresses: Address[] | string[];
 
   @Property()
   public createdAt: Date;

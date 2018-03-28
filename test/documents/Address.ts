@@ -6,18 +6,21 @@ import { ObjectID } from 'bson';
 export class Address extends BaseDocument {
 
   @Property()
-  street1: string;
+  public _id: ObjectID;
 
   @Property()
-  street2: string;
+  public street1: string;
 
   @Property()
-  city: string;
+  public street2: string;
 
   @Property()
-  zipCode: string;
+  public city: string;
+
+  @Property()
+  public zipCode: string;
 
   @OneToOne({targetDocument: User})
-  user: User | ObjectID;
+  public user: User | ObjectID;
 
 }

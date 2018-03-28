@@ -44,7 +44,8 @@ export class Repository<T extends BaseDocument> {
       document.preCreate(this);
     }
 
-    const result = await this.collection.insertOne(document.toObject());
+    const filteredObject = this.prepareObjectForSave(document);
+    const result = await this.collection.insertOne(filteredObject);
     if (result.insertedId) {
       document._id = result.insertedId;
     }
@@ -174,7 +175,7 @@ export class Repository<T extends BaseDocument> {
    */
   public async update(id: BaseDocument | ObjectID | string, updateObject: any): Promise<UpdateWriteOpResult> {
     await this.checkCollection();
-    updateObject = this.prepareUpdateObject(updateObject);
+    updateObject = this.prepareObjectForSave(updateObject);
 
     return await this.collection.updateOne({_id: this.getId(id)}, {$set: updateObject});
   }
@@ -335,39 +336,23 @@ export class Repository<T extends BaseDocument> {
       const referenceMetadata = references[populateProperty];
       const referencedField = referenceMetadata['referencedField'] || null;
       const referencedRepository = this.documentManager.getRepository(referenceMetadata.targetDocument);
-      const where: any = {};
+      const where: any = this.createWhereForPopulationFindBy(populateProperty, referencedField, documents);
+      if (!Object.keys(where).length) {
+        continue;
+      }
 
-      if (referenceMetadata['referencedField']) {
-        // You don't own join property - it is in related table
-        where[referenceMetadata['referencedField']] = {$in: documents.map(document => document._id)};
-      } else {
-        // You have related ids in you collection
-        // @TODO
-        // if (isArray(documents[0][populateProperty])) {
-        //   where['_id'] = {$in: document[populateProperty]};
-        // } else {
-        //   where['_id'] = document[populateProperty];
-        // }
+      const referencedDocuments = await referencedRepository.findBy(where);
+      if (!referencedDocuments.length) {
+        continue;
       }
 
       if (referencedField) {
-        const referencedDocuments = await referencedRepository.findBy(where);
-        if (!referencedDocuments) {
-          continue;
-        }
-
         if (referenceMetadata.referenceType === 'OneToOne') {
           referencedDocuments.forEach(referencedDocument => {
             const documentId = referencedDocument[referencedField].toHexString();
             mappedDocumentsById[documentId][populateProperty] = referencedDocument;
           });
         } else if (referenceMetadata.referenceType === 'OneToMany') {
-          const mappedReferencesById: any = {};
-          referencedDocuments.forEach(referencedData => {
-            // Instantiate document with raw data and map it to object by its id
-            mappedReferencesById[referencedData._id.toHexString()] = new referencedRepository.documentType(referencedData);
-          });
-
           for (const foundReference of referencedDocuments) {
             const documentId = foundReference[referencedField].toHexString();
             let destination: any = mappedDocumentsById[documentId][populateProperty];
@@ -381,12 +366,85 @@ export class Repository<T extends BaseDocument> {
           throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
         }
       } else {
-        throw new Error('Not implemented! Only referenced fields are supported.');
+        // No reference field - join is on our side
+        const mappedReferencesById = this.initAndMapById(referencedRepository.documentType, referencedDocuments);
+        if (referenceMetadata.referenceType === 'OneToOne') {
+          documents.forEach(document => {
+            document[populateProperty] = mappedReferencesById[document[populateProperty]];
+          });
+        } else if (referenceMetadata.referenceType === 'OneToMany') {
+          documents.forEach(document => {
+            if (!document[populateProperty] || !isArray(document[populateProperty]) || !document[populateProperty].length) {
+              return;
+            }
+
+            const newArray = new ArrayCollection();
+            document[populateProperty].forEach((referenceId: ObjectID) => {
+              newArray.push(mappedReferencesById[referenceId.toHexString()]);
+            });
+
+            document[populateProperty] = newArray;
+          });
+        } else {
+          throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
+        }
       }
 
     }
 
     return documents;
+  }
+
+  /**
+   * @param {string} populateProperty
+   * @param {string} referencedField
+   * @param {BaseDocument[]} documents
+   * @return {any}
+   */
+  private createWhereForPopulationFindBy(populateProperty: string, referencedField: string, documents: BaseDocument[]) {
+    const where: any = {};
+    if (referencedField) {
+      // You don't own join property - it is in related table
+      where[referencedField] = {$in: documents.map(document => document._id)};
+    } else {
+      const ids: ObjectID[] = [];
+      documents.forEach(document => {
+        if (!document[populateProperty]) {
+          return;
+        }
+
+        if (isArray(document[populateProperty])) {
+          // OneToMany
+          document[populateProperty].forEach((id: ObjectID) => ids.push(id));
+        } else {
+          // OneToOne
+          ids.push(document[populateProperty]);
+        }
+      });
+
+      if (!ids.length) {
+        return where;
+      }
+
+      where['_id'] = {$in: ids};
+    }
+
+    return where;
+  }
+
+  /**
+   * @param {Function} documentType
+   * @param {any[]} referencedDocuments
+   * @return {any}
+   */
+  private initAndMapById(documentType: any, referencedDocuments: any[]) {
+    const mapped: any = {};
+    referencedDocuments.forEach(referencedData => {
+      // Instantiate document with raw data and map it to object by its id
+      mapped[referencedData._id.toHexString()] = new documentType(referencedData);
+    });
+
+    return mapped;
   }
 
   /**
@@ -408,21 +466,24 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param {object} updateObject
+   * @param {object} objectToBeSaved
    * @returns {object}
    */
-  private prepareUpdateObject(updateObject: any) {
+  private prepareObjectForSave(objectToBeSaved: any) {
     const result: any = {};
-    for (const key of Object.keys(updateObject)) {
+    for (const key of Object.keys(objectToBeSaved)) {
       // Filter unknown properties
       if (this.documentType.prototype._odm.references[key]) {
         const reference = this.documentType.prototype._odm.references[key];
         switch (reference.referenceType) {
+          case 'OneToOne' :
+            result[key] = this.getId(objectToBeSaved[key]);
+            break;
           case 'OneToMany':
-            result[key] = this.getEntityIds(updateObject[key]);
+            result[key] = this.getEntityIds(objectToBeSaved[key]);
             break;
           default:
-            throw new Error('Invalid reference type: ' + reference.type);
+            throw new Error('Invalid reference type: ' + reference.referenceType + ' | ' + JSON.stringify(reference));
         }
 
         continue;
@@ -432,7 +493,7 @@ export class Repository<T extends BaseDocument> {
         continue;
       }
 
-      result[key] = updateObject[key];
+      result[key] = objectToBeSaved[key];
     }
 
     return result;
