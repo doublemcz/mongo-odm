@@ -83,7 +83,8 @@ user2.fullName = "another user";
 await userRepository.create(user2);
 
 // You can also send there plain object, after create you will get proper object based by repository
-userRepository.create({fullName: 'another fullname'});
+const userInstance = await userRepository.create({fullName: 'another fullname'});
+console.log(userInstance._id);
 ```
 
 After `create` you will get assigned `_id` to you object from query result
