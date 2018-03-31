@@ -70,15 +70,13 @@ export const logRepository = documentManager.getRepository<Log>(Log);
 export const ... = documentManager.getRepository<...>(...);
 ```
 
-You don't need to get instance from document manager again and just import it where it is needed.
+You don't need to get instance of repository from document manager again and just import it where it is needed.
 
 ### Create
 ```
 const user = await userRepository.create(new User({fullName: "Pepa Voprsalek"));
 ```
-`user` has been initialized as model (so it has all props / methods
 
-You can also put there your already created model and repository just fills the `_id`
 ```
 const user2 = new User();
 user2.fullName = "another user";
@@ -87,6 +85,8 @@ await userRepository.create(user2);
 // You can also send there plain object, after create you will get proper object based by repository
 userRepository.create({fullName: 'another fullname'});
 ```
+
+After `create` you will get assigned `_id` to you object from query result
 
 ### Retrieve
 
