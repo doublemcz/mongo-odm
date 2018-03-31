@@ -265,8 +265,7 @@ export class Repository<T extends BaseDocument> {
    * @returns {BaseDocument}
    */
   private async populateOne(document: BaseDocument, populate: string[]): Promise<BaseDocument> {
-    const odm = document._odm || {};
-    const references = odm.references || {};
+    const references = document.getOdmReferences();
     for (const populateProperty of populate) {
       if (!references[populateProperty]) {
         throw new Error(`You are trying to populate reference ${populateProperty} that is not in you model with proper decorator.`);
@@ -286,17 +285,17 @@ export class Repository<T extends BaseDocument> {
         where[reference['referencedField']] = document._id;
       } else {
         // You have related ids in your collection
-        if (isArray(document[populateProperty])) {
-          where['_id'] = {$in: document[populateProperty]};
+        if (isArray((document as any)[populateProperty])) {
+          where['_id'] = {$in: (document as any)[populateProperty]};
         } else {
-          where['_id'] = document[populateProperty];
+          where['_id'] = (document as any)[populateProperty];
         }
       }
 
       if (reference.referenceType === 'OneToOne') {
         const foundReference = await referencedRepository.findOneBy(where);
         if (foundReference) {
-          document[populateProperty] = new referencedRepository.documentType(foundReference);
+          (document as any)[populateProperty] = new referencedRepository.documentType(foundReference);
         }
       } else if (reference.referenceType === 'OneToMany') {
         const foundReferences = await referencedRepository.findBy(where);
@@ -305,7 +304,7 @@ export class Repository<T extends BaseDocument> {
           referencedDocuments.push(new referencedRepository.documentType(item));
         }
 
-        document[populateProperty] = referencedDocuments;
+        (document as any)[populateProperty] = referencedDocuments;
       } else {
         throw new Error(`Unsupported reference type: '${reference.referenceType}'. It must be OneToOne or OneToMany`);
       }
@@ -354,12 +353,12 @@ export class Repository<T extends BaseDocument> {
       if (referencedField) {
         if (referenceMetadata.referenceType === 'OneToOne') {
           referencedDocuments.forEach(referencedDocument => {
-            const documentId = referencedDocument[referencedField].toHexString();
+            const documentId = (referencedDocument as any)[referencedField].toHexString();
             mappedDocumentsById[documentId][populateProperty] = referencedDocument;
           });
         } else if (referenceMetadata.referenceType === 'OneToMany') {
           for (const foundReference of referencedDocuments) {
-            const documentId = foundReference[referencedField].toHexString();
+            const documentId = (foundReference as any)[referencedField].toHexString();
             let destination: any = mappedDocumentsById[documentId][populateProperty];
             if (!(destination instanceof ArrayCollection)) {
               destination = mappedDocumentsById[documentId][populateProperty] = new ArrayCollection();
@@ -375,20 +374,20 @@ export class Repository<T extends BaseDocument> {
         const mappedReferencesById = this.initAndMapById(referencedRepository.documentType, referencedDocuments);
         if (referenceMetadata.referenceType === 'OneToOne') {
           documents.forEach(document => {
-            document[populateProperty] = mappedReferencesById[document[populateProperty]];
+            (document as any)[populateProperty] = mappedReferencesById[(document as any)[populateProperty]];
           });
         } else if (referenceMetadata.referenceType === 'OneToMany') {
           documents.forEach(document => {
-            if (!document[populateProperty] || !isArray(document[populateProperty]) || !document[populateProperty].length) {
+            if (!(document as any)[populateProperty] || !isArray((document as any)[populateProperty]) || !(document as any)[populateProperty].length) {
               return;
             }
 
             const newArray = new ArrayCollection();
-            document[populateProperty].forEach((referenceId: ObjectID) => {
+            (document as any)[populateProperty].forEach((referenceId: ObjectID) => {
               newArray.push(mappedReferencesById[referenceId.toHexString()]);
             });
 
-            document[populateProperty] = newArray;
+            (document as any)[populateProperty] = newArray;
           });
         } else {
           throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
@@ -414,16 +413,16 @@ export class Repository<T extends BaseDocument> {
     } else {
       const ids: ObjectID[] = [];
       documents.forEach(document => {
-        if (!document[populateProperty]) {
+        if (!(document as any)[populateProperty]) {
           return;
         }
 
-        if (isArray(document[populateProperty])) {
+        if (isArray((document as any)[populateProperty])) {
           // OneToMany
-          document[populateProperty].forEach((id: ObjectID) => ids.push(id));
+          (document as any)[populateProperty].forEach((id: ObjectID) => ids.push(id));
         } else {
           // OneToOne
-          ids.push(document[populateProperty]);
+          ids.push((document as any)[populateProperty]);
         }
       });
 

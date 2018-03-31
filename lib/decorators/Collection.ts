@@ -3,8 +3,10 @@
  * @returns {(target: (Function | any)) => Function | any}
  * @constructor
  */
+import { BaseDocument } from '../BaseDocument';
+
 export function Collection(decoratorOptions: any = {}) {
-  return function (target: Function | any) {
+  return function (target: BaseDocument | any) {
     target._odm = target._odm || {};
     if (decoratorOptions) {
       Object.assign(target._odm, decoratorOptions);

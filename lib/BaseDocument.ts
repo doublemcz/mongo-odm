@@ -2,12 +2,10 @@ import { ObjectId } from 'mongodb';
 
 export abstract class BaseDocument {
 
-  // @TODO find a way how to get rid of this signature
-  [key: string]: any;
-
   // @TODO find way how to put @Property here for all inherited objects
   _id: ObjectId;
 
+  public _odm: OdmInterface;
   protected static collectionName: string;
 
   /**
@@ -37,14 +35,25 @@ export abstract class BaseDocument {
    * @returns {any[]}
    */
   public getOdmProperties(): any[] {
-    return this._odm.properties;
+    return this._odm ? this._odm.properties : [];
   }
 
   /**
-   * @returns {any[]}
+   * @returns {ReferenceInterface[]}
    */
-  public getOdmReferences(): any[] {
-    return this._odm.references;
+  public getOdmReferences() {
+    return this._odm ? this._odm.references : [];
   }
 
+}
+
+export interface OdmInterface {
+  references: any;
+  properties: any;
+}
+
+export interface ReferenceInterface {
+  targetDocument: string,
+  referenceType: string
+  referencedField?: string,
 }

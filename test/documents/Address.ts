@@ -20,7 +20,7 @@ export class Address extends BaseDocument {
   @Property()
   public zipCode: string;
 
-  @OneToOne({targetDocument: User})
+  @OneToOne({targetDocument: 'User'})
   public user: User | ObjectID;
 
 }
