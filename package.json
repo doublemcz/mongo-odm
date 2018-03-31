@@ -6,10 +6,12 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "mocha -r ts-node/register test/**/*.spec.ts",
-    "tslint": "tslint -c tslint.json -p tsconfig.json",
     "coverage": "nyc npm test",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
+    "postversion": "git push && git push --tags",
+    "version:patch": "npm version patch && npm run postversion",
+    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "tslint": "tslint -c tslint.json -p tsconfig.json"
   },
   "author": "Martin Mika",
   "license": "MIT",
