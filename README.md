@@ -29,10 +29,10 @@ export class User extends BaseDocument {
   @Property()
   public fullName: string;
 
-  @OneToMany({targetDocument: Log, referencedField: 'user'})
+  @OneToMany({targetDocument: 'Log', referencedField: 'user'})
   public log: Log[];
 
-  @OneToOne({targetDocument: Car, referencedField: 'user'})
+  @OneToOne({targetDocument: 'Car', referencedField: 'user'})
   public car: Car;
 
 }
