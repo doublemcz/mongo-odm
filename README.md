@@ -83,6 +83,9 @@ You can also put there your already created model and repository just fills the 
 const user2 = new User();
 user2.fullName = "another user";
 await userRepository.create(user2);
+
+// You can also send there plain object, after create you will get proper object based by repository
+userRepository.create({fullName: 'another fullname'});
 ```
 
 ### Retrieve

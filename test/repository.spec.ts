@@ -1,12 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
 import { User } from './documents/User';
-import { Log } from './documents/Log';
 import { Repository } from '../lib';
 import { documentManager } from './core/connection';
-import { isArray } from 'util';
-import { Car } from './documents/Car';
-
 
 describe('Repository', () => {
 
@@ -21,6 +17,14 @@ describe('Repository', () => {
     user.fullName = 'Martin Mika';
     await userRepository.create(user);
     expect(user).to.property('fullName', 'Martin Mika');
+    expect(user._id.toHexString()).be.a('string');
+  });
+
+  it('should create document without entity', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create({fullName: 'plain object'});
+    expect(user).to.be.instanceOf(User);
+    expect(user).to.be.property('fullName', 'plain object');
     expect(user._id.toHexString()).be.a('string');
   });
 

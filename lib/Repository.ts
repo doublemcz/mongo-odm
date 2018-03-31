@@ -37,8 +37,13 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument} document
    */
-  public async create(document: T): Promise<T> {
+  public async create(document: T | any): Promise<T> {
     await this.checkCollection();
+
+    if (!(document instanceof BaseDocument)) {
+      // We got plain object - we need to recreate object with correct instance
+      document = new this.documentType(document);
+    }
 
     if (typeof document.preCreate === 'function') {
       document.preCreate(this);
