@@ -29,11 +29,16 @@ export class User extends BaseDocument {
   @Property()
   public fullName: string;
 
+  // WHen you specify `referenceField` then it means you don't own the join property
   @OneToMany({targetDocument: 'Log', referencedField: 'user'})
   public log: Log[];
 
   @OneToOne({targetDocument: 'Car', referencedField: 'user'})
   public car: Car;
+  
+  // If you don't specify `referenceField` it means you own the the reference IDs - you have array of address ids in your collection
+  @OneToMany({targetDocument: 'Address'})
+  public addresses: Address;
 
 }
 ```
