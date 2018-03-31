@@ -49,6 +49,7 @@ export class User extends BaseDocument {
 First of all you need to create instance of Document Manager
 
 ```
+// database.ts
 // Default is localhost
 const documentManager = await DocumentManager.create({
    database: 'mongo-odm',
@@ -61,10 +62,19 @@ const documentManager = await DocumentManager.create({
 }
 ```
 
+It is recommended to create all repositories and export them from the database.ts as follows:
+
+```
+export const userRepository = documentManager.getRepository<User>(User);
+export const logRepository = documentManager.getRepository<Log>(Log);
+export const ... = documentManager.getRepository<...>(...);
+```
+
+You don't need to get instance from document manager again and just import it where it is needed.
+
 ### Create
 ```
-const userRepository = documentManager.getRepository<User>(User);
-const user = await.userRepository.create(new User({fullName: "Pepa Voprsalek"));
+const user = await userRepository.create(new User({fullName: "Pepa Voprsalek"));
 ```
 `user` has been initialized as model (so it has all props / methods
 
@@ -80,15 +90,8 @@ await userRepository.create(user2);
 All find methods return complete model with all private fields and model methods
 
 ```
-const userRepository = documentManager.getRepository<User>(User);
-const user = await userRepository.findOneBy({fullName: 'Foo bar'});
-```
-
-```
-const user = await userRepository.findOneById('2312ba029fec9223...');
-```
-
-```
+const user1 = await userRepository.findOneBy({fullName: 'Foo bar'});
+const user2= await userRepository.findOneById('2312ba029fec9223...');
 const users = await userRepository.findBy({'fullName': '....'});
 ```
 
@@ -96,15 +99,15 @@ const users = await userRepository.findBy({'fullName': '....'});
 #### Populate
 
 ```
-const userRepository = documentManager.getRepository<User>(User);
 const user = await userRepository.findOneBy({...}, ['log']);
-// user.log[0].eventType
+// If log is @OneToMany you can access as usual -> user.log[0].eventType
 ```
 
 ### Update
 ```
 // By string id
 userRepository.update('52acfac010e110a0..', { fullName: "new fullName"});
+
 // By ObjectId
 userRepository.update(ObjectId(...), { fullName: "new fullName"});
 
@@ -115,8 +118,7 @@ userRepository.update(user, { fullName: "new fullName"});
 
 Also you can update a document by where:
 ```
-// By ObjectId
-userRepository.updateOneBy({fullName: 'some filter value', { fullName: "new fullName"});
+userRepository.updateOneBy({fullName: 'old fullname'}, { fullName: 'new fullName'});
 ```
 
 
@@ -124,23 +126,26 @@ userRepository.updateOneBy({fullName: 'some filter value', { fullName: "new full
 ```
 // By string id
 userRepository.delete('52acfac010e110a0..');
+
 // By ObjectId
-userRepository.delete(ObjectId(...));
+const userId = new ObjectID('52acfac010e110a0..'):
+userRepository.delete(userId);
 
 // By model
-const user = await userRepository.find(...);
+const user = await userRepository.find({...});
 userRepository.delete(user);
 ```
 
 Also you can delete a document by where:
 ```
-// By ObjectId
 userRepository.deleteOneBy({fullName: 'some filter value'});
 ```
 
 ### Count
 ```
 const usersCount = await userRepository.count();
+
+// With where
 const youngUserCount = await userRepository.count({age: 29');
 ```
 
@@ -163,10 +168,10 @@ class User extends BaseDocument {
 ```
 
 
-## Missing
+## Future
 - custom repositories
 - delete and update hooks (pre, post)
 - validations
 - field name translation (custom db fields)
 - possibility to specify where in @OneToOne or @OneToMany
-- lazy loading on @OneToOne and @OneToMany
+- lazy loading on @OneToOne and @OneToMany...?
