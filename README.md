@@ -95,7 +95,7 @@ All find methods return complete model with all private fields and model methods
 
 ```
 const user1 = await userRepository.findOneBy({fullName: 'Foo bar'});
-const user2= await userRepository.findOneById('2312ba029fec9223...');
+const user2 = await userRepository.findOneById('2312ba029fec9223...');
 const users = await userRepository.findBy({'fullName': '....'});
 ```
 
