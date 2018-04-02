@@ -9,7 +9,7 @@
     "coverage": "nyc npm test",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "postversion": "git push && git push --tags",
-    "version:patch": "npm version patch && npm run postversion",
+    "version:patch": "npm version patch && npm run postversion && npm publish",
     "test": "mocha -r ts-node/register test/**/*.spec.ts",
     "tslint": "tslint -c tslint.json -p tsconfig.json"
   },
