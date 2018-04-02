@@ -51,7 +51,7 @@ First of all you need to create instance of Document Manager
 ```
 // database.ts
 // Default is localhost
-const documentManager = await DocumentManager.create({
+const documentManager = DocumentManager.create({
    database: 'mongo-odm',
    documentsDir: './dist/documents' // Documents dir must point dist one
 });
