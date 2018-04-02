@@ -20,7 +20,7 @@ yarn add mongo-odm
 ## Model
 
 ```
-@Document()
+@Collection()
 export class User extends BaseDocument {
 
   @Property()
