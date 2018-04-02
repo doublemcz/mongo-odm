@@ -477,7 +477,8 @@ export class Repository<T extends BaseDocument> {
     const result: any = {};
     for (const key of Object.keys(objectToBeSaved)) {
       // Filter unknown properties
-      if (this.documentType.prototype._odm.references[key]) {
+      if (this.documentType.prototype._odm.references
+        && this.documentType.prototype._odm.references[key]) {
         const reference = this.documentType.prototype._odm.references[key];
         switch (reference.referenceType) {
           case 'OneToOne' :
