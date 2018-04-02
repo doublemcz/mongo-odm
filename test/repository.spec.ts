@@ -20,6 +20,10 @@ describe('Repository', () => {
     expect(user._id.toHexString()).be.a('string');
   });
 
+  it('should throw exception on non-registered document', async () => {
+    expect(documentManager.getRepository.bind(<any>(function test(){}))).to.throw();
+  });
+
   it('should create document without entity', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = await userRepository.create({fullName: 'plain object'});
