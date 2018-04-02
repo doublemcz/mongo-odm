@@ -647,7 +647,8 @@ var Repository = /** @class */ (function () {
         for (var _i = 0, _a = Object.keys(objectToBeSaved); _i < _a.length; _i++) {
             var key = _a[_i];
             // Filter unknown properties
-            if (this.documentType.prototype._odm.references[key]) {
+            if (this.documentType.prototype._odm.references
+                && this.documentType.prototype._odm.references[key]) {
                 var reference = this.documentType.prototype._odm.references[key];
                 switch (reference.referenceType) {
                     case 'OneToOne':
