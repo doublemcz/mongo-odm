@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 export declare abstract class BaseDocument {
-    [key: string]: any;
     _id: ObjectId;
+    _odm: OdmInterface;
     protected static collectionName: string;
     /**
      * @param {Object} properties
@@ -16,7 +16,16 @@ export declare abstract class BaseDocument {
      */
     getOdmProperties(): any[];
     /**
-     * @returns {any[]}
+     * @returns {ReferenceInterface[]}
      */
-    getOdmReferences(): any[];
+    getOdmReferences(): any;
+}
+export interface OdmInterface {
+    references: any;
+    properties: any;
+}
+export interface ReferenceInterface {
+    targetDocument: string;
+    referenceType: string;
+    referencedField?: string;
 }

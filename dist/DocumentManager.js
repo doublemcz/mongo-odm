@@ -148,11 +148,17 @@ var DocumentManager = /** @class */ (function () {
         if (util_1.isString(type)) {
             identifier = type;
         }
-        else {
+        else if (util_1.isFunction(type)) {
             identifier = type.name;
+        }
+        else {
+            throw new Error("Invalid type has been passed to getRepository. Given: '" + type + "'");
         }
         if (this.repositories[identifier]) {
             return this.repositories[identifier];
+        }
+        if (!this.documents[identifier]) {
+            throw new Error("There is not such '" + identifier + "' document. Did you register it? Maybe the documents dir is not valid.");
         }
         return this.createRepository(this.documents[identifier]);
     };

@@ -1,10 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * @param {object} decoratorOptions
- * @returns {(target: (Function | any)) => Function | any}
- * @constructor
- */
 function Collection(decoratorOptions) {
     if (decoratorOptions === void 0) { decoratorOptions = {}; }
     return function (target) {

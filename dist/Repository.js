@@ -80,6 +80,10 @@ var Repository = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.checkCollection()];
                     case 1:
                         _a.sent();
+                        if (!(document instanceof BaseDocument_1.BaseDocument)) {
+                            // We got plain object - we need to recreate object with correct instance
+                            document = new this.documentType(document);
+                        }
                         if (typeof document.preCreate === 'function') {
                             document.preCreate(this);
                         }
@@ -399,12 +403,11 @@ var Repository = /** @class */ (function () {
      */
     Repository.prototype.populateOne = function (document, populate) {
         return __awaiter(this, void 0, void 0, function () {
-            var odm, references, _i, populate_1, populateProperty, reference, referencedRepository, where, foundReference, foundReferences, referencedDocuments, _a, foundReferences_1, item;
+            var references, _i, populate_1, populateProperty, reference, referencedRepository, where, foundReference, foundReferences, referencedDocuments, _a, foundReferences_1, item;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        odm = document._odm || {};
-                        references = odm.references || {};
+                        references = document.getOdmReferences();
                         _i = 0, populate_1 = populate;
                         _b.label = 1;
                     case 1:

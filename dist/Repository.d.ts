@@ -18,7 +18,7 @@ export declare class Repository<T extends BaseDocument> {
     /**
      * @param {BaseDocument} document
      */
-    create(document: T): Promise<T>;
+    create(document: T | any): Promise<T>;
     /**
      * @param {object} where
      * @param {string[]} populate

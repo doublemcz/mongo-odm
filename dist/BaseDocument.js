@@ -27,13 +27,13 @@ var BaseDocument = /** @class */ (function () {
      * @returns {any[]}
      */
     BaseDocument.prototype.getOdmProperties = function () {
-        return this._odm.properties;
+        return this._odm ? this._odm.properties : [];
     };
     /**
-     * @returns {any[]}
+     * @returns {ReferenceInterface[]}
      */
     BaseDocument.prototype.getOdmReferences = function () {
-        return this._odm.references;
+        return this._odm ? this._odm.references : [];
     };
     return BaseDocument;
 }());
