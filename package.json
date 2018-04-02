@@ -1,6 +1,6 @@
 {
   "name": "mongo-odm",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "Mongo ODB client",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
