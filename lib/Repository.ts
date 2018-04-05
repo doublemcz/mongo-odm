@@ -174,15 +174,26 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param {BaseDocument|ObjectId|string} id
+   * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
    * @param {object} updateObject
+   * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(id: BaseDocument | ObjectID | string, updateObject: any): Promise<UpdateWriteOpResult> {
+  public async update(idOrObject: BaseDocument | ObjectID | string, updateObject: any, updateWriteOpResultOutput: any = null): Promise<T> {
     await this.checkCollection();
     updateObject = this.prepareObjectForSave(updateObject);
 
-    return await this.collection.updateOne({_id: this.getId(id)}, {$set: updateObject});
+    const objectId = this.getId(idOrObject);
+    const updateWriteOpResult = await this.collection.updateOne({_id: objectId}, {$set: updateObject});
+    Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
+    let foundInstance;
+    if (idOrObject instanceof BaseDocument) {
+      foundInstance = Object.assign(idOrObject, updateObject);
+    } else {
+      foundInstance = this.find(objectId);
+    }
+
+    return foundInstance;
   }
 
   /**
@@ -190,7 +201,7 @@ export class Repository<T extends BaseDocument> {
    * @param {object} updateObject
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult> {
+  public async updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument> {
     await this.checkCollection();
     const document = await this.collection.findOne(filter);
 

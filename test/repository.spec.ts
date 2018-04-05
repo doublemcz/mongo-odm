@@ -142,16 +142,23 @@ describe('Repository', () => {
     expect(foundUser.age).eq(29);
   });
 
-  it('should update document with document', async () => {
+  it('should update document with document instance', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = await userRepository.create(new User({fullName: 'updateOneWithDocument'}));
-    await userRepository.update(user._id, {age: 29});
+    await userRepository.update(user, {age: 29});
     const foundUser = await userRepository.findOneBy({fullName: 'updateOneWithDocument'});
     if (!foundUser) {
       throw new Error('updateOneBy is missing, should be there!');
     }
 
     expect(foundUser.age).eq(29);
+  });
+
+  it('should update document with document instance', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    let user = await userRepository.create(new User({fullName: 'updateOneWithDocumentInstanceExpectInstance'}));
+    user = await userRepository.update(user, {age: 18});
+    expect(user.age).eq(18);
   });
 
   it('should update document with string id', async () => {
