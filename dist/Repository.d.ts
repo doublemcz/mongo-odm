@@ -66,17 +66,18 @@ export declare class Repository<T extends BaseDocument> {
      */
     deleteManyNative(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
     /**
-     * @param {BaseDocument|ObjectId|string} id
+     * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
      * @param {object} updateObject
+     * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(id: BaseDocument | ObjectID | string, updateObject: any): Promise<UpdateWriteOpResult>;
+    update(idOrObject: BaseDocument | ObjectID | string, updateObject: any, updateWriteOpResultOutput?: any): Promise<T>;
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult>;
+    updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument>;
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject

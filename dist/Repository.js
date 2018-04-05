@@ -278,20 +278,33 @@ var Repository = /** @class */ (function () {
         });
     };
     /**
-     * @param {BaseDocument|ObjectId|string} id
+     * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
      * @param {object} updateObject
+     * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.update = function (id, updateObject) {
+    Repository.prototype.update = function (idOrObject, updateObject, updateWriteOpResultOutput) {
+        if (updateWriteOpResultOutput === void 0) { updateWriteOpResultOutput = null; }
         return __awaiter(this, void 0, void 0, function () {
+            var objectId, updateWriteOpResult, foundInstance;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.checkCollection()];
                     case 1:
                         _a.sent();
                         updateObject = this.prepareObjectForSave(updateObject);
-                        return [4 /*yield*/, this.collection.updateOne({ _id: this.getId(id) }, { $set: updateObject })];
-                    case 2: return [2 /*return*/, _a.sent()];
+                        objectId = this.getId(idOrObject);
+                        return [4 /*yield*/, this.collection.updateOne({ _id: objectId }, { $set: updateObject })];
+                    case 2:
+                        updateWriteOpResult = _a.sent();
+                        Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
+                        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
+                            foundInstance = Object.assign(idOrObject, updateObject);
+                        }
+                        else {
+                            foundInstance = this.find(objectId);
+                        }
+                        return [2 /*return*/, foundInstance];
                 }
             });
         });
