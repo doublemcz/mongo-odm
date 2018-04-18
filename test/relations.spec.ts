@@ -45,10 +45,52 @@ describe('Relations', () => {
     }
   });
 
+  it('should check original populated property after update', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const carRepository = documentManager.getRepository<Car>(Car);
+    const fullName = 'test populated property persistence';
+    let user;
+    user = await userRepository.create({fullName});
+    await carRepository.create({brand: 'Tesla', user: user._id});
+    user = await userRepository.findOneBy({fullName}, ['car']);
+    if (!user) {
+      throw new Error('Error - document disappeared from database');
+    }
+
+    user = await userRepository.update(user, {fullName}, ['car']);
+    if (user) {
+      expect(user.car).to.be.an.instanceof(Car);
+      expect(user.car.brand).to.be.equal('Tesla');
+    } else {
+      throw new Error('Error - document disappeared from database');
+    }
+  });
+
+  it('should check repopulated property after update', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const addressRepository = documentManager.getRepository<Address>(Address);
+    const fullName = 'test populated/updated property';
+    let user;
+    const address = await addressRepository.create({city: 'Prague'});
+    const address2 = await addressRepository.create({city: 'Brno'});
+    await userRepository.create({fullName: fullName, address: address});
+    user = await userRepository.findOneBy({fullName}, ['address']);
+    if (!user) {
+      throw new Error('Error - document disappeared from database');
+    }
+
+    user = await userRepository.update(user, {address: address2._id});
+    if (user) {
+      expect(user.address).to.be.an.instanceof(Address);
+      expect((user.address as Address).city).to.be.equal('Brno');
+    } else {
+      throw new Error('Error - document disappeared from database');
+    }
+  });
+
   it('should check oneToMany without reference field - update', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const addressRepository = documentManager.getRepository<Address>(Address);
-
     const user = await userRepository.create(new User({fullName: 'Zla Chripka'}));
     const city1 = await addressRepository.create(new Address({street: 'a street', city: 'Prague'}));
     const city2 = await addressRepository.create(new Address({street: 'a street', city: 'Brno'}));
@@ -89,7 +131,7 @@ describe('Relations', () => {
     const userRepository = documentManager.getRepository<User>(User);
     const logRepository = documentManager.getRepository<Log>(Log);
     const user = await userRepository.create(new User({fullName: 'findByPopulateOneToManyReferenceField'}));
-    await logRepository.create(new Log({eventType: 1, user: user._id }));
+    await logRepository.create(new Log({eventType: 1, user: user._id}));
     const foundUsers = await userRepository.findBy({fullName: 'findByPopulateOneToManyReferenceField'}, ['log']);
     expect(foundUsers.length).to.be.eq(1);
     expect(foundUsers[0].log.length).to.be.eq(1);

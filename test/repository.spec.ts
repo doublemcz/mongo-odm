@@ -164,7 +164,9 @@ describe('Repository', () => {
     const userRepository = documentManager.getRepository<User>(User);
     let user = await userRepository.create(new User({fullName: 'updateOneWithDocumentInstanceExpectInstance'}));
     user = await userRepository.update(user, {age: 18});
-    expect(user.age).eq(18);
+    if (user) {
+      expect(user.age).eq(18);
+    }
   });
 
   it('should update document with string id', async () => {

@@ -155,7 +155,7 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async delete(id: BaseDocument | ObjectID | string, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async delete(id: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
     await this.checkCollection();
 
     return await this.collection.deleteOne({_id: this.getId(id)}, options);
@@ -190,7 +190,7 @@ export class Repository<T extends BaseDocument> {
    * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(idOrObject: BaseDocument | ObjectID | string, updateObject: any, updateWriteOpResultOutput: any = null): Promise<T> {
+  public async update(idOrObject: Identifier, updateObject: any, updateWriteOpResultOutput: any = null): Promise<T> {
     await this.checkCollection();
     updateObject = this.prepareObjectForSave(updateObject);
 
@@ -199,7 +199,7 @@ export class Repository<T extends BaseDocument> {
     Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
     let foundInstance;
     if (idOrObject instanceof BaseDocument) {
-      foundInstance = Object.assign(idOrObject, updateObject);
+      foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject);
     } else {
       foundInstance = this.find(objectId);
     }
@@ -208,11 +208,44 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
+   * @param {BaseDocument} instance
+   * @param {object} updateProperties
+   * @returns {Promise<BaseDocument>}
+   */
+  private async updateInstanceAfterUpdate(instance: any, updateProperties: any) {
+    const references = instance.getOdmReferences();
+
+    for (const property of Object.keys(updateProperties)) {
+      if (references[property]) {
+        // If we passed populated property of a document and we updated reference id, we need to repopulate
+        if (isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
+          // TODO add support for Array (populate many)
+          if ((instance as any)[property]._id.toHexString() !== updateProperties[property].toHexString()) {
+            // Repopulate
+            (instance as any)[property] = updateProperties[property];
+            await this.populateOne(instance, [property]);
+          }
+
+          // The id is the same... so do nothing, we would replace populated property with plain object
+        } else {
+          // Not populated, just update the reference id
+          (instance as any)[property] = updateProperties[property];
+        }
+      } else {
+        // Common property update
+        (instance as any)[property] = updateProperties[property];
+      }
+    }
+
+    return instance;
+  }
+
+  /**
    * @param {FilterQuery} filter
    * @param {object} updateObject
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument> {
+  public async updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument | null> {
     await this.checkCollection();
     const document = await this.collection.findOne(filter);
 
@@ -311,6 +344,10 @@ export class Repository<T extends BaseDocument> {
           where['_id'] = {$in: (document as any)[populateProperty]};
         } else {
           where['_id'] = (document as any)[populateProperty];
+        }
+
+        if (isObject(where._id) && where['_id']._id) {
+          where['_id'] = where['_id']._id;
         }
       }
 
@@ -474,10 +511,10 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param {BaseDocument | ObjectID | string} id
+   * @param {Identifier} id
    * @returns {ObjectId}
    */
-  protected getId(id: BaseDocument | ObjectID | string): ObjectID {
+  protected getId(id: Identifier): ObjectID {
     if (isString(id)) {
       return new ObjectID(id);
     } else if (id instanceof ObjectID) {
@@ -545,3 +582,5 @@ export class Repository<T extends BaseDocument> {
 class ArrayCollection extends Array {
   // Just helper collection
 }
+
+export type Identifier = BaseDocument | ObjectID | string;

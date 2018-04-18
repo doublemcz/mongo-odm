@@ -57,7 +57,7 @@ export declare class Repository<T extends BaseDocument> {
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    delete(id: BaseDocument | ObjectID | string, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
+    delete(id: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
     /**
      * @param {FilterQuery} filter
      * @param {FindOneOptions} options
@@ -76,13 +76,19 @@ export declare class Repository<T extends BaseDocument> {
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(idOrObject: BaseDocument | ObjectID | string, updateObject: any, updateWriteOpResultOutput?: any): Promise<T>;
+    update(idOrObject: Identifier, updateObject: any, updateWriteOpResultOutput?: any): Promise<T>;
+    /**
+     * @param {BaseDocument} instance
+     * @param {object} updateProperties
+     * @returns {Promise<BaseDocument>}
+     */
+    private updateInstanceAfterUpdate(instance, updateProperties);
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument>;
+    updateOneBy(filter: any, updateObject: any): Promise<UpdateWriteOpResult | BaseDocument | null>;
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
@@ -132,10 +138,10 @@ export declare class Repository<T extends BaseDocument> {
      */
     private initAndMapById(documentType, referencedDocuments);
     /**
-     * @param {BaseDocument | ObjectID | string} id
+     * @param {Identifier} id
      * @returns {ObjectId}
      */
-    protected getId(id: BaseDocument | ObjectID | string): ObjectID;
+    protected getId(id: Identifier): ObjectID;
     /**
      * @param {object} objectToBeSaved
      * @returns {object}
@@ -147,3 +153,4 @@ export declare class Repository<T extends BaseDocument> {
      */
     private getEntityIds(array);
 }
+export declare type Identifier = BaseDocument | ObjectID | string;

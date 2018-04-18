@@ -307,13 +307,59 @@ var Repository = /** @class */ (function () {
                     case 2:
                         updateWriteOpResult = _a.sent();
                         Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
-                        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
-                            foundInstance = Object.assign(idOrObject, updateObject);
-                        }
-                        else {
-                            foundInstance = this.find(objectId);
-                        }
-                        return [2 /*return*/, foundInstance];
+                        if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.updateInstanceAfterUpdate(idOrObject, updateObject)];
+                    case 3:
+                        foundInstance = _a.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        foundInstance = this.find(objectId);
+                        _a.label = 5;
+                    case 5: return [2 /*return*/, foundInstance];
+                }
+            });
+        });
+    };
+    /**
+     * @param {BaseDocument} instance
+     * @param {object} updateProperties
+     * @returns {Promise<BaseDocument>}
+     */
+    Repository.prototype.updateInstanceAfterUpdate = function (instance, updateProperties) {
+        return __awaiter(this, void 0, void 0, function () {
+            var references, _i, _a, property;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        references = instance.getOdmReferences();
+                        _i = 0, _a = Object.keys(updateProperties);
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 8];
+                        property = _a[_i];
+                        if (!references[property]) return [3 /*break*/, 6];
+                        if (!(util_1.isObject(instance[property]) && !util_1.isArray(instance[property]))) return [3 /*break*/, 4];
+                        if (!(instance[property]._id.toHexString() !== updateProperties[property].toHexString())) return [3 /*break*/, 3];
+                        // Repopulate
+                        instance[property] = updateProperties[property];
+                        return [4 /*yield*/, this.populateOne(instance, [property])];
+                    case 2:
+                        _b.sent();
+                        _b.label = 3;
+                    case 3: return [3 /*break*/, 5];
+                    case 4:
+                        // Not populated, just update the reference id
+                        instance[property] = updateProperties[property];
+                        _b.label = 5;
+                    case 5: return [3 /*break*/, 7];
+                    case 6:
+                        // Common property update
+                        instance[property] = updateProperties[property];
+                        _b.label = 7;
+                    case 7:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 8: return [2 /*return*/, instance];
                 }
             });
         });
@@ -455,6 +501,9 @@ var Repository = /** @class */ (function () {
                             }
                             else {
                                 where['_id'] = document[populateProperty];
+                            }
+                            if (util_1.isObject(where._id) && where['_id']._id) {
+                                where['_id'] = where['_id']._id;
                             }
                         }
                         if (!(reference.referenceType === 'OneToOne')) return [3 /*break*/, 3];
@@ -642,7 +691,7 @@ var Repository = /** @class */ (function () {
         return mapped;
     };
     /**
-     * @param {BaseDocument | ObjectID | string} id
+     * @param {Identifier} id
      * @returns {ObjectId}
      */
     Repository.prototype.getId = function (id) {
