@@ -35,6 +35,17 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
+   * @param {string} property
+   * @returns {string}
+   */
+  public canPopulate(property: string) {
+    const document =  new this.documentType();
+    const references = document.getOdmReferences();
+
+    return !!references[property];
+  }
+
+  /**
    * @param {BaseDocument} document
    */
   public async create(document: T | any): Promise<T> {

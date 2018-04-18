@@ -24,6 +24,12 @@ describe('Repository', () => {
     expect(documentManager.getRepository.bind(<any>(function test(){}))).to.throw();
   });
 
+  it('should check if property can be populated', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    expect(userRepository.canPopulate('test')).to.be.equal(false);
+    expect(userRepository.canPopulate('car')).to.be.equal(true);
+  });
+
   it('should create document without entity', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = await userRepository.create({fullName: 'plain object'});

@@ -16,6 +16,11 @@ export declare class Repository<T extends BaseDocument> {
      */
     getCollectionName(): string;
     /**
+     * @param {string} property
+     * @returns {string}
+     */
+    canPopulate(property: string): boolean;
+    /**
      * @param {BaseDocument} document
      */
     create(document: T | any): Promise<T>;

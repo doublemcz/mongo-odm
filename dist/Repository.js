@@ -70,6 +70,15 @@ var Repository = /** @class */ (function () {
         return this.documentType._odm.collectionName;
     };
     /**
+     * @param {string} property
+     * @returns {string}
+     */
+    Repository.prototype.canPopulate = function (property) {
+        var document = new this.documentType();
+        var references = document.getOdmReferences();
+        return !!references[property];
+    };
+    /**
      * @param {BaseDocument} document
      */
     Repository.prototype.create = function (document) {
