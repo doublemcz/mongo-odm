@@ -541,7 +541,7 @@ export class Repository<T extends BaseDocument> {
         const reference = this.documentType.prototype._odm.references[key];
         switch (reference.referenceType) {
           case 'OneToOne' :
-            result[key] = this.getId(objectToBeSaved[key]);
+            result[key] = isString(objectToBeSaved[key]) && objectToBeSaved[key] === '' ? null : this.getId(objectToBeSaved[key]);
             break;
           case 'OneToMany':
             result[key] = this.getEntityIds(objectToBeSaved[key]);
