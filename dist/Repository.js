@@ -338,8 +338,9 @@ var Repository = /** @class */ (function () {
                         if (!(_i < _a.length)) return [3 /*break*/, 8];
                         property = _a[_i];
                         if (!references[property]) return [3 /*break*/, 6];
-                        if (!(util_1.isObject(instance[property]) && !util_1.isArray(instance[property]))) return [3 /*break*/, 4];
-                        if (!(instance[property]._id.toHexString() !== updateProperties[property].toHexString())) return [3 /*break*/, 3];
+                        instance = instance;
+                        if (!(!!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property]))) return [3 /*break*/, 4];
+                        if (!(instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString())) return [3 /*break*/, 3];
                         // Repopulate
                         instance[property] = updateProperties[property];
                         return [4 /*yield*/, this.populateOne(instance, [property])];
@@ -723,7 +724,9 @@ var Repository = /** @class */ (function () {
                 var reference = this.documentType.prototype._odm.references[key];
                 switch (reference.referenceType) {
                     case 'OneToOne':
-                        result[key] = this.getId(objectToBeSaved[key]);
+                        result[key] = !objectToBeSaved[key] || (util_1.isString(objectToBeSaved[key]) && objectToBeSaved[key] === '')
+                            ? null
+                            : this.getId(objectToBeSaved[key]);
                         break;
                     case 'OneToMany':
                         result[key] = this.getEntityIds(objectToBeSaved[key]);

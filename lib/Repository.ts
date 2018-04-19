@@ -217,23 +217,24 @@ export class Repository<T extends BaseDocument> {
 
     for (const property of Object.keys(updateProperties)) {
       if (references[property]) {
+        instance = (instance as any);
         // If we passed populated property of a document and we updated reference id, we need to repopulate
-        if (isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
+        if (!!instance[property] && isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
           // TODO add support for Array (populate many)
-          if ((instance as any)[property]._id.toHexString() !== updateProperties[property].toHexString()) {
+          if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
             // Repopulate
-            (instance as any)[property] = updateProperties[property];
+            instance[property] = updateProperties[property];
             await this.populateOne(instance, [property]);
           }
 
           // The id is the same... so do nothing, we would replace populated property with plain object
         } else {
           // Not populated, just update the reference id
-          (instance as any)[property] = updateProperties[property];
+          instance[property] = updateProperties[property];
         }
       } else {
         // Common property update
-        (instance as any)[property] = updateProperties[property];
+        instance[property] = updateProperties[property];
       }
     }
 
@@ -541,7 +542,9 @@ export class Repository<T extends BaseDocument> {
         const reference = this.documentType.prototype._odm.references[key];
         switch (reference.referenceType) {
           case 'OneToOne' :
-            result[key] = isString(objectToBeSaved[key]) && objectToBeSaved[key] === '' ? null : this.getId(objectToBeSaved[key]);
+            result[key] = !objectToBeSaved[key] || (isString(objectToBeSaved[key]) && objectToBeSaved[key] === '')
+              ? null
+              : this.getId(objectToBeSaved[key]);
             break;
           case 'OneToMany':
             result[key] = this.getEntityIds(objectToBeSaved[key]);
