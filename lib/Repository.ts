@@ -187,10 +187,11 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
    * @param {object} updateObject
+   * @param {string[]} populate
    * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(idOrObject: Identifier, updateObject: any, updateWriteOpResultOutput: any = null): Promise<T> {
+  public async update(idOrObject: Identifier, updateObject: any, populate: string[] = [], updateWriteOpResultOutput: any = null): Promise<T> {
     await this.checkCollection();
     updateObject = this.prepareObjectForSave(updateObject);
 
@@ -199,9 +200,9 @@ export class Repository<T extends BaseDocument> {
     Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
     let foundInstance;
     if (idOrObject instanceof BaseDocument) {
-      foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject);
+      foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject, populate);
     } else {
-      foundInstance = this.find(objectId);
+      foundInstance = this.find(objectId, populate);
     }
 
     return foundInstance;
@@ -210,9 +211,10 @@ export class Repository<T extends BaseDocument> {
   /**
    * @param {BaseDocument} instance
    * @param {object} updateProperties
+   * @param {string[]} populate
    * @returns {Promise<BaseDocument>}
    */
-  private async updateInstanceAfterUpdate(instance: any, updateProperties: any) {
+  private async updateInstanceAfterUpdate(instance: any, updateProperties: any, populate: string[]) {
     const references = instance.getOdmReferences();
 
     for (const property of Object.keys(updateProperties)) {
@@ -222,9 +224,11 @@ export class Repository<T extends BaseDocument> {
         if (!!instance[property] && isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
           // TODO add support for Array (populate many)
           if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
-            // Repopulate
+            // Repopulate due to reference ID changed and already populated object
             instance[property] = updateProperties[property];
-            await this.populateOne(instance, [property]);
+            if (populate.indexOf(property) === -1) {
+              populate.push(property);
+            }
           }
 
           // The id is the same... so do nothing, we would replace populated property with plain object
@@ -237,6 +241,8 @@ export class Repository<T extends BaseDocument> {
         instance[property] = updateProperties[property];
       }
     }
+
+    await this.populateOne(instance, populate);
 
     return instance;
   }
