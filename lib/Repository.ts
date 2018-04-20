@@ -221,7 +221,7 @@ export class Repository<T extends BaseDocument> {
       if (references[property]) {
         instance = (instance as any);
         // If we passed populated property of a document and we updated reference id, we need to repopulate
-        if (!!instance[property] && isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
+        if (!!updateProperties[property] && !!instance[property] && isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
           // TODO add support for Array (populate many)
           if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
             // Repopulate due to reference ID changed and already populated object
