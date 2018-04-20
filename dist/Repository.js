@@ -1,291 +1,151 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var BaseDocument_1 = require("./BaseDocument");
-var bson_1 = require("bson");
-var util_1 = require("util");
-var Repository = /** @class */ (function () {
+const BaseDocument_1 = require("./BaseDocument");
+const bson_1 = require("bson");
+const util_1 = require("util");
+class Repository {
     /**
      * @param {Type} documentType
      * @param {DocumentManager} documentManager
      */
-    function Repository(documentType, documentManager) {
-        var _this = this;
+    constructor(documentType, documentManager) {
         this.documentType = documentType;
         this.documentManager = documentManager;
         documentManager
             .getDb()
-            .then(function (db) {
-            _this.collection = db.collection(_this.getCollectionName());
+            .then((db) => {
+            this.collection = db.collection(this.getCollectionName());
         });
     }
     /**
      * @return {string}
      */
-    Repository.prototype.getCollectionName = function () {
+    getCollectionName() {
         return this.documentType._odm.collectionName;
-    };
+    }
     /**
      * @param {string} property
      * @returns {string}
      */
-    Repository.prototype.canPopulate = function (property) {
-        var document = new this.documentType();
-        var references = document.getOdmReferences();
+    canPopulate(property) {
+        const document = new this.documentType();
+        const references = document.getOdmReferences();
         return !!references[property];
-    };
+    }
     /**
      * @param {BaseDocument} document
      */
-    Repository.prototype.create = function (document) {
-        return __awaiter(this, void 0, void 0, function () {
-            var filteredObject, result;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        if (!(document instanceof BaseDocument_1.BaseDocument)) {
-                            // We got plain object - we need to recreate object with correct instance
-                            document = new this.documentType(document);
-                        }
-                        if (typeof document.preCreate === 'function') {
-                            document.preCreate(this);
-                        }
-                        filteredObject = this.prepareObjectForSave(document);
-                        return [4 /*yield*/, this.collection.insertOne(filteredObject)];
-                    case 2:
-                        result = _a.sent();
-                        if (result.insertedId) {
-                            document._id = result.insertedId;
-                        }
-                        if (typeof document.postCreate === 'function') {
-                            document.postCreate(this);
-                        }
-                        return [2 /*return*/, document];
-                }
-            });
-        });
-    };
+    async create(document) {
+        await this.checkCollection();
+        if (!(document instanceof BaseDocument_1.BaseDocument)) {
+            // We got plain object - we need to recreate object with correct instance
+            document = new this.documentType(document);
+        }
+        if (typeof document.preCreate === 'function') {
+            document.preCreate(this);
+        }
+        const filteredObject = this.prepareObjectForSave(document);
+        const result = await this.collection.insertOne(filteredObject);
+        if (result.insertedId) {
+            document._id = result.insertedId;
+        }
+        if (typeof document.postCreate === 'function') {
+            document.postCreate(this);
+        }
+        return document;
+    }
     /**
      * @param {object} where
      * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise}
      */
-    Repository.prototype.findOneBy = function (where, populate, options) {
-        if (where === void 0) { where = {}; }
-        if (populate === void 0) { populate = []; }
-        if (options === void 0) { options = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var rawData;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.findOne(where, options)];
-                    case 2:
-                        rawData = _a.sent();
-                        if (!rawData) {
-                            return [2 /*return*/, null];
-                        }
-                        return [2 /*return*/, this.processFindOne(rawData, populate)];
-                }
-            });
-        });
-    };
+    async findOneBy(where = {}, populate = [], options = {}) {
+        await this.checkCollection();
+        const rawData = await this.collection.findOne(where, options);
+        if (!rawData) {
+            return null;
+        }
+        return this.processFindOne(rawData, populate);
+    }
     /**
      * @param {string | ObjectID} id
      * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise}
      */
-    Repository.prototype.find = function (id, populate, options) {
-        if (populate === void 0) { populate = []; }
-        if (options === void 0) { options = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var rawData;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.findOne({ _id: id }, options)];
-                    case 2:
-                        rawData = _a.sent();
-                        if (!rawData) {
-                            return [2 /*return*/, null];
-                        }
-                        return [2 /*return*/, this.processFindOne(rawData, populate)];
-                }
-            });
-        });
-    };
+    async find(id, populate = [], options = {}) {
+        await this.checkCollection();
+        const rawData = await this.collection.findOne({ _id: id }, options);
+        if (!rawData) {
+            return null;
+        }
+        return this.processFindOne(rawData, populate);
+    }
     /**
      *
      * @param rawData
      * @param {string[]} populate
      * @returns {BaseDocument}
      */
-    Repository.prototype.processFindOne = function (rawData, populate) {
-        return __awaiter(this, void 0, void 0, function () {
-            var document;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        document = this.mapResultProperties(rawData);
-                        if (!populate.length) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.populateOne(document, populate)];
-                    case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2: return [2 /*return*/, document];
-                }
-            });
-        });
-    };
+    async processFindOne(rawData, populate) {
+        const document = this.mapResultProperties(rawData);
+        if (populate.length) {
+            await this.populateOne(document, populate);
+        }
+        return document;
+    }
     /**
      * @param {FilterQuery} query
      * @param {string[]} populate
      * @param {FindOneOptions} options
      * @returns {Promise<[]>}
      */
-    Repository.prototype.findBy = function (query, populate, options) {
-        if (populate === void 0) { populate = []; }
-        if (options === void 0) { options = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var resultCursor, resultArray, result, _i, resultArray_1, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.find(query, options)];
-                    case 2:
-                        resultCursor = _a.sent();
-                        return [4 /*yield*/, resultCursor.toArray()];
-                    case 3:
-                        resultArray = _a.sent();
-                        if (!resultArray.length) {
-                            return [2 /*return*/, []];
-                        }
-                        result = [];
-                        for (_i = 0, resultArray_1 = resultArray; _i < resultArray_1.length; _i++) {
-                            item = resultArray_1[_i];
-                            result.push(this.mapResultProperties(item));
-                        }
-                        if (!populate.length) return [3 /*break*/, 5];
-                        return [4 /*yield*/, this.populateMany(result, populate)];
-                    case 4:
-                        _a.sent();
-                        _a.label = 5;
-                    case 5: return [2 /*return*/, result];
-                }
-            });
-        });
-    };
+    async findBy(query, populate = [], options = {}) {
+        await this.checkCollection();
+        // @TODO find out why `find` is @deprecated
+        const resultCursor = await this.collection.find(query, options);
+        const resultArray = await resultCursor.toArray();
+        if (!resultArray.length) {
+            return [];
+        }
+        const result = [];
+        for (let item of resultArray) {
+            result.push(this.mapResultProperties(item));
+        }
+        if (populate.length) {
+            await this.populateMany(result, populate);
+        }
+        return result;
+    }
     /**
      * @param id
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    Repository.prototype.delete = function (id, options) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.deleteOne({ _id: this.getId(id) }, options)];
-                    case 2: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
+    async delete(id, options) {
+        await this.checkCollection();
+        return await this.collection.deleteOne({ _id: this.getId(id) }, options);
+    }
     /**
      * @param {FilterQuery} filter
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    Repository.prototype.deleteOneBy = function (filter, options) {
-        return __awaiter(this, void 0, void 0, function () {
-            var document;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.findOne(filter)];
-                    case 2:
-                        document = _a.sent();
-                        return [2 /*return*/, this.delete(document)];
-                }
-            });
-        });
-    };
+    async deleteOneBy(filter, options) {
+        await this.checkCollection();
+        const document = await this.collection.findOne(filter);
+        return this.delete(document);
+    }
     /**
      * @param {FilterQuery} filter
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    Repository.prototype.deleteManyNative = function (filter, options) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.deleteMany(filter, options)];
-                    case 2: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
+    async deleteManyNative(filter, options) {
+        await this.checkCollection();
+        return await this.collection.deleteMany(filter, options);
+    }
     /**
      * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
      * @param {object} updateObject
@@ -293,152 +153,101 @@ var Repository = /** @class */ (function () {
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.update = function (idOrObject, updateObject, populate, updateWriteOpResultOutput) {
-        if (populate === void 0) { populate = []; }
-        if (updateWriteOpResultOutput === void 0) { updateWriteOpResultOutput = null; }
-        return __awaiter(this, void 0, void 0, function () {
-            var objectId, updateWriteOpResult, foundInstance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        updateObject = this.prepareObjectForSave(updateObject);
-                        objectId = this.getId(idOrObject);
-                        return [4 /*yield*/, this.collection.updateOne({ _id: objectId }, { $set: updateObject })];
-                    case 2:
-                        updateWriteOpResult = _a.sent();
-                        Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
-                        if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.updateInstanceAfterUpdate(idOrObject, updateObject, populate)];
-                    case 3:
-                        foundInstance = _a.sent();
-                        return [3 /*break*/, 5];
-                    case 4:
-                        foundInstance = this.find(objectId, populate);
-                        _a.label = 5;
-                    case 5: return [2 /*return*/, foundInstance];
-                }
-            });
-        });
-    };
+    async update(idOrObject, updateObject, populate = [], updateWriteOpResultOutput = {}) {
+        await this.checkCollection();
+        updateObject = this.prepareObjectForSave(updateObject);
+        const objectId = this.getId(idOrObject);
+        const updateWriteOpResult = await this.collection.updateOne({ _id: objectId }, { $set: updateObject });
+        Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
+        let foundInstance;
+        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
+            foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject, populate);
+        }
+        else {
+            foundInstance = this.find(objectId, populate);
+        }
+        return foundInstance;
+    }
     /**
      * @param {BaseDocument} instance
      * @param {object} updateProperties
      * @param {string[]} populate
      * @returns {Promise<BaseDocument>}
      */
-    Repository.prototype.updateInstanceAfterUpdate = function (instance, updateProperties, populate) {
-        return __awaiter(this, void 0, void 0, function () {
-            var references, _i, _a, property;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        references = instance.getOdmReferences();
-                        for (_i = 0, _a = Object.keys(updateProperties); _i < _a.length; _i++) {
-                            property = _a[_i];
-                            if (references[property]) {
-                                instance = instance;
-                                // If we passed populated property of a document and we updated reference id, we need to repopulate
-                                if (!!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property])) {
-                                    // TODO add support for Array (populate many)
-                                    if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
-                                        // Repopulate due to reference ID changed and already populated object
-                                        instance[property] = updateProperties[property];
-                                        if (populate.indexOf(property) === -1) {
-                                            populate.push(property);
-                                        }
-                                    }
-                                    // The id is the same... so do nothing, we would replace populated property with plain object
-                                }
-                                else {
-                                    // Not populated, just update the reference id
-                                    instance[property] = updateProperties[property];
-                                }
-                            }
-                            else {
-                                // Common property update
-                                instance[property] = updateProperties[property];
-                            }
+    async updateInstanceAfterUpdate(instance, updateProperties, populate) {
+        const references = instance.getOdmReferences();
+        for (const property of Object.keys(updateProperties)) {
+            if (references[property]) {
+                instance = instance;
+                // If we passed populated property of a document and we updated reference id, we need to repopulate
+                if (!!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property])) {
+                    // TODO add support for Array (populate many)
+                    if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
+                        // Repopulate due to reference ID changed and already populated object
+                        instance[property] = updateProperties[property];
+                        if (populate.indexOf(property) === -1) {
+                            populate.push(property);
                         }
-                        return [4 /*yield*/, this.populateOne(instance, populate)];
-                    case 1:
-                        _b.sent();
-                        return [2 /*return*/, instance];
+                    }
+                    // The id is the same... so do nothing, we would replace populated property with plain object
                 }
-            });
-        });
-    };
+                else {
+                    // Not populated, just update the reference id
+                    instance[property] = updateProperties[property];
+                }
+            }
+            else {
+                // Common property update
+                instance[property] = updateProperties[property];
+            }
+        }
+        await this.populateOne(instance, populate);
+        return instance;
+    }
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.updateOneBy = function (filter, updateObject) {
-        return __awaiter(this, void 0, void 0, function () {
-            var document;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.findOne(filter)];
-                    case 2:
-                        document = _a.sent();
-                        return [2 /*return*/, this.update(document, updateObject)];
-                }
-            });
-        });
-    };
+    async updateOneBy(filter, updateObject) {
+        await this.checkCollection();
+        const document = await this.collection.findOne(filter);
+        return this.update(document, updateObject);
+    }
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject
      * @param {FindOneOptions} options
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.updateManyNative = function (filter, updateObject, options) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.checkCollection()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.collection.updateMany(filter, { $set: updateObject }, options)];
-                    case 2: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
+    async updateManyNative(filter, updateObject, options) {
+        await this.checkCollection();
+        return await this.collection.updateMany(filter, { $set: updateObject }, options);
+    }
     /**
      * @param {object} filter
      * @returns {Promise<number>}
      */
-    Repository.prototype.count = function (filter) {
-        if (filter === void 0) { filter = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, this.collection.count(filter)];
-            });
-        });
-    };
+    async count(filter = {}) {
+        return this.collection.count(filter);
+    }
     /**
      * Returns initialized document with mapped properties
      *
      * @param {object} result
      * @returns {BaseDocument}
      */
-    Repository.prototype.mapResultProperties = function (result) {
-        var document = new this.documentType();
-        var resultKeys = Object.keys(result);
-        for (var property in document.getOdmProperties()) {
+    mapResultProperties(result) {
+        const document = new this.documentType();
+        const resultKeys = Object.keys(result);
+        for (const property in document.getOdmProperties()) {
             if (resultKeys.indexOf(property) !== -1) {
                 document[property] = result[property];
             }
         }
-        var references = document.getOdmReferences() || {};
-        for (var _i = 0, _a = Object.keys(references); _i < _a.length; _i++) {
-            var referenceKey = _a[_i];
-            var reference = references[referenceKey];
+        const references = document.getOdmReferences() || {};
+        for (const referenceKey of Object.keys(references)) {
+            const reference = references[referenceKey];
             if (reference.referencedField) {
                 continue;
             }
@@ -447,259 +256,202 @@ var Repository = /** @class */ (function () {
             }
         }
         return document;
-    };
+    }
     /**
      * @returns {undefined}
      */
-    Repository.prototype.checkCollection = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: 
-                    // We need to wait until the database is initialized
-                    return [4 /*yield*/, this.documentManager.getDb()];
-                    case 1:
-                        // We need to wait until the database is initialized
-                        _a.sent();
-                        if (!this.collection) {
-                            throw new Error('Collection was not initialized properly');
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async checkCollection() {
+        // We need to wait until the database is initialized
+        await this.documentManager.getDb();
+        if (!this.collection) {
+            throw new Error('Collection was not initialized properly');
+        }
+    }
     /**
      * @param {BaseDocument} document
      * @param {string[]} populate
      * @returns {BaseDocument}
      */
-    Repository.prototype.populateOne = function (document, populate) {
-        return __awaiter(this, void 0, void 0, function () {
-            var references, _i, populate_1, populateProperty, reference, referencedRepository, where, foundReference, foundReferences, referencedDocuments, _a, foundReferences_1, item;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        references = document.getOdmReferences();
-                        _i = 0, populate_1 = populate;
-                        _b.label = 1;
-                    case 1:
-                        if (!(_i < populate_1.length)) return [3 /*break*/, 7];
-                        populateProperty = populate_1[_i];
-                        if (!references[populateProperty]) {
-                            throw new Error("You are trying to populate reference " + populateProperty + " that is not in you model with proper decorator.");
-                        }
-                        reference = references[populateProperty];
-                        referencedRepository = this.documentManager.getRepository(reference.targetDocument);
-                        where = {};
-                        if (reference['referencedField']) {
-                            // You don't own join property - it is in related table
-                            if (!document._id) {
-                                throw new Error("Document identifier is missing. The document must have filled '_id'.");
-                            }
-                            where[reference['referencedField']] = document._id;
-                        }
-                        else {
-                            // You have related ids in your collection
-                            if (util_1.isArray(document[populateProperty])) {
-                                where['_id'] = { $in: document[populateProperty] };
-                            }
-                            else {
-                                where['_id'] = document[populateProperty];
-                            }
-                            if (util_1.isObject(where._id) && where['_id']._id) {
-                                where['_id'] = where['_id']._id;
-                            }
-                        }
-                        if (!(reference.referenceType === 'OneToOne')) return [3 /*break*/, 3];
-                        return [4 /*yield*/, referencedRepository.findOneBy(where)];
-                    case 2:
-                        foundReference = _b.sent();
-                        if (foundReference) {
-                            document[populateProperty] = new referencedRepository.documentType(foundReference);
-                        }
-                        return [3 /*break*/, 6];
-                    case 3:
-                        if (!(reference.referenceType === 'OneToMany')) return [3 /*break*/, 5];
-                        return [4 /*yield*/, referencedRepository.findBy(where)];
-                    case 4:
-                        foundReferences = _b.sent();
-                        referencedDocuments = [];
-                        for (_a = 0, foundReferences_1 = foundReferences; _a < foundReferences_1.length; _a++) {
-                            item = foundReferences_1[_a];
-                            referencedDocuments.push(new referencedRepository.documentType(item));
-                        }
-                        document[populateProperty] = referencedDocuments;
-                        return [3 /*break*/, 6];
-                    case 5: throw new Error("Unsupported reference type: '" + reference.referenceType + "'. It must be OneToOne or OneToMany");
-                    case 6:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 7: return [2 /*return*/, document];
+    async populateOne(document, populate) {
+        const references = document.getOdmReferences();
+        for (const populateProperty of populate) {
+            if (!references[populateProperty]) {
+                throw new Error(`You are trying to populate reference ${populateProperty} that is not in you model with proper decorator.`);
+            }
+            // You have access to property decorator options here in 'reference'
+            const reference = references[populateProperty];
+            const referencedRepository = this.documentManager.getRepository(reference.targetDocument);
+            const where = {};
+            if (reference['referencedField']) {
+                // You don't own join property - it is in related table
+                if (!document._id) {
+                    throw new Error(`Document identifier is missing. The document must have filled '_id'.`);
                 }
-            });
-        });
-    };
+                where[reference['referencedField']] = document._id;
+            }
+            else {
+                // You have related ids in your collection
+                if (util_1.isArray(document[populateProperty])) {
+                    where['_id'] = { $in: document[populateProperty] };
+                }
+                else {
+                    where['_id'] = document[populateProperty];
+                }
+                if (util_1.isObject(where._id) && where['_id']._id) {
+                    where['_id'] = where['_id']._id;
+                }
+            }
+            if (reference.referenceType === 'OneToOne') {
+                const foundReference = await referencedRepository.findOneBy(where);
+                if (foundReference) {
+                    document[populateProperty] = new referencedRepository.documentType(foundReference);
+                }
+            }
+            else if (reference.referenceType === 'OneToMany') {
+                const foundReferences = await referencedRepository.findBy(where);
+                const referencedDocuments = [];
+                for (const item of foundReferences) {
+                    referencedDocuments.push(new referencedRepository.documentType(item));
+                }
+                document[populateProperty] = referencedDocuments;
+            }
+            else {
+                throw new Error(`Unsupported reference type: '${reference.referenceType}'. It must be OneToOne or OneToMany`);
+            }
+        }
+        return document;
+    }
     /**
      * @param {BaseDocument[]} documents
      * @param {string[]} populate
      * @returns {BaseDocument}
      */
-    Repository.prototype.populateMany = function (documents, populate) {
-        return __awaiter(this, void 0, void 0, function () {
-            var odm, references, mappedDocumentsById, _loop_1, this_1, _i, populate_2, populateProperty;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!documents.length) {
-                            return [2 /*return*/, documents];
-                        }
-                        odm = documents[0]._odm || {};
-                        references = odm.references || {};
-                        mappedDocumentsById = {};
-                        documents.forEach(function (document) {
-                            mappedDocumentsById[document._id.toHexString()] = document;
-                        });
-                        _loop_1 = function (populateProperty) {
-                            var referenceMetadata, referencedField, referencedRepository, where, referencedDocuments, _i, referencedDocuments_1, foundReference, documentId, destination, mappedReferencesById_1;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        if (!references[populateProperty]) {
-                                            throw new Error("You are trying to populate reference " + populateProperty + " that is not in you model with proper decorator.");
-                                        }
-                                        referenceMetadata = references[populateProperty];
-                                        referencedField = referenceMetadata['referencedField'] || null;
-                                        referencedRepository = this_1.documentManager.getRepository(referenceMetadata.targetDocument);
-                                        where = this_1.createWhereForPopulationFindBy(populateProperty, referencedField, documents);
-                                        if (!Object.keys(where).length) {
-                                            return [2 /*return*/, "continue"];
-                                        }
-                                        return [4 /*yield*/, referencedRepository.findBy(where)];
-                                    case 1:
-                                        referencedDocuments = _a.sent();
-                                        if (!referencedDocuments.length) {
-                                            return [2 /*return*/, "continue"];
-                                        }
-                                        if (referencedField) {
-                                            if (referenceMetadata.referenceType === 'OneToOne') {
-                                                referencedDocuments.forEach(function (referencedDocument) {
-                                                    var documentId = referencedDocument[referencedField].toHexString();
-                                                    mappedDocumentsById[documentId][populateProperty] = referencedDocument;
-                                                });
-                                            }
-                                            else if (referenceMetadata.referenceType === 'OneToMany') {
-                                                for (_i = 0, referencedDocuments_1 = referencedDocuments; _i < referencedDocuments_1.length; _i++) {
-                                                    foundReference = referencedDocuments_1[_i];
-                                                    documentId = foundReference[referencedField].toHexString();
-                                                    destination = mappedDocumentsById[documentId][populateProperty];
-                                                    if (!(destination instanceof ArrayCollection)) {
-                                                        destination = mappedDocumentsById[documentId][populateProperty] = new ArrayCollection();
-                                                    }
-                                                    destination.push(foundReference);
-                                                }
-                                            }
-                                            else {
-                                                throw new Error("Unsupported reference type: '" + referenceMetadata.referenceType + "'. It must be OneToOne or OneToMany");
-                                            }
-                                        }
-                                        else {
-                                            mappedReferencesById_1 = this_1.initAndMapById(referencedRepository.documentType, referencedDocuments);
-                                            if (referenceMetadata.referenceType === 'OneToOne') {
-                                                documents.forEach(function (document) {
-                                                    document[populateProperty] = mappedReferencesById_1[document[populateProperty]];
-                                                });
-                                            }
-                                            else if (referenceMetadata.referenceType === 'OneToMany') {
-                                                documents.forEach(function (document) {
-                                                    if (!document[populateProperty] || !util_1.isArray(document[populateProperty]) || !document[populateProperty].length) {
-                                                        return;
-                                                    }
-                                                    var newArray = new ArrayCollection();
-                                                    document[populateProperty].forEach(function (referenceId) {
-                                                        newArray.push(mappedReferencesById_1[referenceId.toHexString()]);
-                                                    });
-                                                    document[populateProperty] = newArray;
-                                                });
-                                            }
-                                            else {
-                                                throw new Error("Unsupported reference type: '" + referenceMetadata.referenceType + "'. It must be OneToOne or OneToMany");
-                                            }
-                                        }
-                                        return [2 /*return*/];
-                                }
-                            });
-                        };
-                        this_1 = this;
-                        _i = 0, populate_2 = populate;
-                        _a.label = 1;
-                    case 1:
-                        if (!(_i < populate_2.length)) return [3 /*break*/, 4];
-                        populateProperty = populate_2[_i];
-                        return [5 /*yield**/, _loop_1(populateProperty)];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/, documents];
-                }
-            });
+    async populateMany(documents, populate) {
+        if (!documents.length) {
+            return documents;
+        }
+        const odm = documents[0]._odm || {};
+        const references = odm.references || {};
+        const mappedDocumentsById = {};
+        documents.forEach(document => {
+            mappedDocumentsById[document._id.toHexString()] = document;
         });
-    };
+        for (const populateProperty of populate) {
+            if (!references[populateProperty]) {
+                throw new Error(`You are trying to populate reference ${populateProperty} that is not in you model with proper decorator.`);
+            }
+            // You have access to property decorator options here in 'referenceMetadata'
+            const referenceMetadata = references[populateProperty];
+            const referencedField = referenceMetadata['referencedField'] || null;
+            const referencedRepository = this.documentManager.getRepository(referenceMetadata.targetDocument);
+            const where = this.createWhereForPopulationFindBy(populateProperty, referencedField, documents);
+            if (!Object.keys(where).length) {
+                continue;
+            }
+            const referencedDocuments = await referencedRepository.findBy(where);
+            if (!referencedDocuments.length) {
+                continue;
+            }
+            if (referencedField) {
+                if (referenceMetadata.referenceType === 'OneToOne') {
+                    referencedDocuments.forEach(referencedDocument => {
+                        const documentId = referencedDocument[referencedField].toHexString();
+                        mappedDocumentsById[documentId][populateProperty] = referencedDocument;
+                    });
+                }
+                else if (referenceMetadata.referenceType === 'OneToMany') {
+                    for (const foundReference of referencedDocuments) {
+                        const documentId = foundReference[referencedField].toHexString();
+                        let destination = mappedDocumentsById[documentId][populateProperty];
+                        if (!(destination instanceof ArrayCollection)) {
+                            destination = mappedDocumentsById[documentId][populateProperty] = new ArrayCollection();
+                        }
+                        destination.push(foundReference);
+                    }
+                }
+                else {
+                    throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
+                }
+            }
+            else {
+                // No reference field - join is on our side
+                const mappedReferencesById = this.initAndMapById(referencedRepository.documentType, referencedDocuments);
+                if (referenceMetadata.referenceType === 'OneToOne') {
+                    documents.forEach(document => {
+                        document[populateProperty] = mappedReferencesById[document[populateProperty]];
+                    });
+                }
+                else if (referenceMetadata.referenceType === 'OneToMany') {
+                    documents.forEach(document => {
+                        if (!document[populateProperty] || !util_1.isArray(document[populateProperty]) || !document[populateProperty].length) {
+                            return;
+                        }
+                        const newArray = new ArrayCollection();
+                        document[populateProperty].forEach((referenceId) => {
+                            newArray.push(mappedReferencesById[referenceId.toHexString()]);
+                        });
+                        document[populateProperty] = newArray;
+                    });
+                }
+                else {
+                    throw new Error(`Unsupported reference type: '${referenceMetadata.referenceType}'. It must be OneToOne or OneToMany`);
+                }
+            }
+        }
+        return documents;
+    }
     /**
      * @param {string} populateProperty
      * @param {string} referencedField
      * @param {BaseDocument[]} documents
      * @return {any}
      */
-    Repository.prototype.createWhereForPopulationFindBy = function (populateProperty, referencedField, documents) {
-        var where = {};
+    createWhereForPopulationFindBy(populateProperty, referencedField, documents) {
+        const where = {};
         if (referencedField) {
             // You don't own join property - it is in related table
-            where[referencedField] = { $in: documents.map(function (document) { return document._id; }) };
+            where[referencedField] = { $in: documents.map(document => document._id) };
         }
         else {
-            var ids_1 = [];
-            documents.forEach(function (document) {
+            const ids = [];
+            documents.forEach(document => {
                 if (!document[populateProperty]) {
                     return;
                 }
                 if (util_1.isArray(document[populateProperty])) {
                     // OneToMany
-                    document[populateProperty].forEach(function (id) { return ids_1.push(id); });
+                    document[populateProperty].forEach((id) => ids.push(id));
                 }
                 else {
                     // OneToOne
-                    ids_1.push(document[populateProperty]);
+                    ids.push(document[populateProperty]);
                 }
             });
-            if (!ids_1.length) {
+            if (!ids.length) {
                 return where;
             }
-            where['_id'] = { $in: ids_1 };
+            where['_id'] = { $in: ids };
         }
         return where;
-    };
+    }
     /**
      * @param {Function} documentType
      * @param {any[]} referencedDocuments
      * @return {any}
      */
-    Repository.prototype.initAndMapById = function (documentType, referencedDocuments) {
-        var mapped = {};
-        referencedDocuments.forEach(function (referencedData) {
+    initAndMapById(documentType, referencedDocuments) {
+        const mapped = {};
+        referencedDocuments.forEach(referencedData => {
             // Instantiate document with raw data and map it to object by its id
             mapped[referencedData._id.toHexString()] = new documentType(referencedData);
         });
         return mapped;
-    };
+    }
     /**
      * @param {Identifier} id
      * @returns {ObjectId}
      */
-    Repository.prototype.getId = function (id) {
+    getId(id) {
         if (util_1.isString(id)) {
             return new bson_1.ObjectID(id);
         }
@@ -710,19 +462,18 @@ var Repository = /** @class */ (function () {
             return id._id;
         }
         throw new Error('Given id is not supported: ' + id);
-    };
+    }
     /**
      * @param {object} objectToBeSaved
      * @returns {object}
      */
-    Repository.prototype.prepareObjectForSave = function (objectToBeSaved) {
-        var result = {};
-        for (var _i = 0, _a = Object.keys(objectToBeSaved); _i < _a.length; _i++) {
-            var key = _a[_i];
+    prepareObjectForSave(objectToBeSaved) {
+        const result = {};
+        for (const key of Object.keys(objectToBeSaved)) {
             // Filter unknown properties
             if (this.documentType.prototype._odm.references
                 && this.documentType.prototype._odm.references[key]) {
-                var reference = this.documentType.prototype._odm.references[key];
+                const reference = this.documentType.prototype._odm.references[key];
                 switch (reference.referenceType) {
                     case 'OneToOne':
                         result[key] = !objectToBeSaved[key] || (util_1.isString(objectToBeSaved[key]) && objectToBeSaved[key] === '')
@@ -743,11 +494,10 @@ var Repository = /** @class */ (function () {
             result[key] = objectToBeSaved[key];
         }
         return result;
-    };
-    Repository.prototype.getEntityIds = function (array) {
-        var result = [];
-        for (var _i = 0, array_1 = array; _i < array_1.length; _i++) {
-            var item = array_1[_i];
+    }
+    getEntityIds(array) {
+        const result = [];
+        for (const item of array) {
             if (item instanceof bson_1.ObjectID) {
                 result.push(item);
             }
@@ -759,14 +509,8 @@ var Repository = /** @class */ (function () {
             }
         }
         return result;
-    };
-    return Repository;
-}());
-exports.Repository = Repository;
-var ArrayCollection = /** @class */ (function (_super) {
-    __extends(ArrayCollection, _super);
-    function ArrayCollection() {
-        return _super !== null && _super.apply(this, arguments) || this;
     }
-    return ArrayCollection;
-}(Array));
+}
+exports.Repository = Repository;
+class ArrayCollection extends Array {
+}

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-function Collection(decoratorOptions) {
-    if (decoratorOptions === void 0) { decoratorOptions = {}; }
+function Collection(decoratorOptions = {}) {
     return function (target) {
         target._odm = target._odm || {};
         if (decoratorOptions) {

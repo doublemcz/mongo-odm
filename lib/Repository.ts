@@ -191,13 +191,13 @@ export class Repository<T extends BaseDocument> {
    * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(idOrObject: Identifier, updateObject: any, populate: string[] = [], updateWriteOpResultOutput: any = null): Promise<T> {
+  public async update(idOrObject: Identifier, updateObject: any, populate: string[] = [], updateWriteOpResultOutput: any = {}): Promise<T> {
     await this.checkCollection();
     updateObject = this.prepareObjectForSave(updateObject);
 
     const objectId = this.getId(idOrObject);
     const updateWriteOpResult = await this.collection.updateOne({_id: objectId}, {$set: updateObject});
-    Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
+    Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
     let foundInstance;
     if (idOrObject instanceof BaseDocument) {
       foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject, populate);
