@@ -520,8 +520,6 @@ export class Repository<T extends BaseDocument> {
       return new ObjectID(id);
     } else if (id instanceof ObjectID) {
       return id;
-    } else if (id instanceof BaseDocument) {
-      return id._id;
     } else if (isObject(id)) {
       return (id as any)._id;
     }
@@ -566,15 +564,15 @@ export class Repository<T extends BaseDocument> {
     return result;
   }
 
-  /**
-   * @param array
-   * @return {ObjectId[]|string[]}
-   */
   private getEntityIds(array: any) {
-    const result: ObjectID | string[] = [];
+    const result: any = [];
     for (const item of array) {
-      if (item._id) {
+      if (item instanceof ObjectID) {
+        result.push(item);
+      } else if (item._id) {
         result.push(item._id);
+      } else if (item.id) {
+        result.push(item.id);
       }
     }
 

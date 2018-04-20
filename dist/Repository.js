@@ -702,9 +702,6 @@ var Repository = /** @class */ (function () {
         else if (id instanceof bson_1.ObjectID) {
             return id;
         }
-        else if (id instanceof BaseDocument_1.BaseDocument) {
-            return id._id;
-        }
         else if (util_1.isObject(id)) {
             return id._id;
         }
@@ -743,16 +740,18 @@ var Repository = /** @class */ (function () {
         }
         return result;
     };
-    /**
-     * @param array
-     * @return {ObjectId[]|string[]}
-     */
     Repository.prototype.getEntityIds = function (array) {
         var result = [];
         for (var _i = 0, array_1 = array; _i < array_1.length; _i++) {
             var item = array_1[_i];
-            if (item._id) {
+            if (item instanceof bson_1.ObjectID) {
+                result.push(item);
+            }
+            else if (item._id) {
                 result.push(item._id);
+            }
+            else if (item.id) {
+                result.push(item.id);
             }
         }
         return result;

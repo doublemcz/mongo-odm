@@ -147,10 +147,6 @@ export declare class Repository<T extends BaseDocument> {
      * @returns {object}
      */
     private prepareObjectForSave(objectToBeSaved);
-    /**
-     * @param array
-     * @return {ObjectId[]|string[]}
-     */
     private getEntityIds(array);
 }
 export declare type Identifier = BaseDocument | ObjectID | string;
