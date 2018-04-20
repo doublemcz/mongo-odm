@@ -73,16 +73,18 @@ export declare class Repository<T extends BaseDocument> {
     /**
      * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
      * @param {object} updateObject
+     * @param {string[]} populate
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(idOrObject: Identifier, updateObject: any, updateWriteOpResultOutput?: any): Promise<T>;
+    update(idOrObject: Identifier, updateObject: any, populate?: string[], updateWriteOpResultOutput?: any): Promise<T>;
     /**
      * @param {BaseDocument} instance
      * @param {object} updateProperties
+     * @param {string[]} populate
      * @returns {Promise<BaseDocument>}
      */
-    private updateInstanceAfterUpdate(instance, updateProperties);
+    private updateInstanceAfterUpdate(instance, updateProperties, populate);
     /**
      * @param {FilterQuery} filter
      * @param {object} updateObject

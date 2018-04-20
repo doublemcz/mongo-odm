@@ -289,10 +289,12 @@ var Repository = /** @class */ (function () {
     /**
      * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
      * @param {object} updateObject
+     * @param {string[]} populate
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    Repository.prototype.update = function (idOrObject, updateObject, updateWriteOpResultOutput) {
+    Repository.prototype.update = function (idOrObject, updateObject, populate, updateWriteOpResultOutput) {
+        if (populate === void 0) { populate = []; }
         if (updateWriteOpResultOutput === void 0) { updateWriteOpResultOutput = null; }
         return __awaiter(this, void 0, void 0, function () {
             var objectId, updateWriteOpResult, foundInstance;
@@ -308,12 +310,12 @@ var Repository = /** @class */ (function () {
                         updateWriteOpResult = _a.sent();
                         Object.assign(updateWriteOpResult, updateWriteOpResultOutput);
                         if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.updateInstanceAfterUpdate(idOrObject, updateObject)];
+                        return [4 /*yield*/, this.updateInstanceAfterUpdate(idOrObject, updateObject, populate)];
                     case 3:
                         foundInstance = _a.sent();
                         return [3 /*break*/, 5];
                     case 4:
-                        foundInstance = this.find(objectId);
+                        foundInstance = this.find(objectId, populate);
                         _a.label = 5;
                     case 5: return [2 /*return*/, foundInstance];
                 }
@@ -323,44 +325,46 @@ var Repository = /** @class */ (function () {
     /**
      * @param {BaseDocument} instance
      * @param {object} updateProperties
+     * @param {string[]} populate
      * @returns {Promise<BaseDocument>}
      */
-    Repository.prototype.updateInstanceAfterUpdate = function (instance, updateProperties) {
+    Repository.prototype.updateInstanceAfterUpdate = function (instance, updateProperties, populate) {
         return __awaiter(this, void 0, void 0, function () {
             var references, _i, _a, property;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         references = instance.getOdmReferences();
-                        _i = 0, _a = Object.keys(updateProperties);
-                        _b.label = 1;
+                        for (_i = 0, _a = Object.keys(updateProperties); _i < _a.length; _i++) {
+                            property = _a[_i];
+                            if (references[property]) {
+                                instance = instance;
+                                // If we passed populated property of a document and we updated reference id, we need to repopulate
+                                if (!!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property])) {
+                                    // TODO add support for Array (populate many)
+                                    if (instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString()) {
+                                        // Repopulate due to reference ID changed and already populated object
+                                        instance[property] = updateProperties[property];
+                                        if (populate.indexOf(property) === -1) {
+                                            populate.push(property);
+                                        }
+                                    }
+                                    // The id is the same... so do nothing, we would replace populated property with plain object
+                                }
+                                else {
+                                    // Not populated, just update the reference id
+                                    instance[property] = updateProperties[property];
+                                }
+                            }
+                            else {
+                                // Common property update
+                                instance[property] = updateProperties[property];
+                            }
+                        }
+                        return [4 /*yield*/, this.populateOne(instance, populate)];
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 8];
-                        property = _a[_i];
-                        if (!references[property]) return [3 /*break*/, 6];
-                        instance = instance;
-                        if (!(!!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property]))) return [3 /*break*/, 4];
-                        if (!(instance[property]._id && instance[property]._id.toHexString() !== updateProperties[property].toHexString())) return [3 /*break*/, 3];
-                        // Repopulate
-                        instance[property] = updateProperties[property];
-                        return [4 /*yield*/, this.populateOne(instance, [property])];
-                    case 2:
                         _b.sent();
-                        _b.label = 3;
-                    case 3: return [3 /*break*/, 5];
-                    case 4:
-                        // Not populated, just update the reference id
-                        instance[property] = updateProperties[property];
-                        _b.label = 5;
-                    case 5: return [3 /*break*/, 7];
-                    case 6:
-                        // Common property update
-                        instance[property] = updateProperties[property];
-                        _b.label = 7;
-                    case 7:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 8: return [2 /*return*/, instance];
+                        return [2 /*return*/, instance];
                 }
             });
         });
