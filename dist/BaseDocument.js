@@ -9,6 +9,10 @@ class BaseDocument {
         for (const property of Object.keys(properties)) {
             _this[property] = properties[property];
         }
+        this.mergeOdm();
+    }
+    mergeOdm() {
+        Object.assign(this._odm, this.__proto__.constructor._odm);
     }
     /**
      * @returns {object}
@@ -22,10 +26,16 @@ class BaseDocument {
         return result;
     }
     /**
-     * @returns {any[]}
+     * @returns {object[]}
      */
     getOdmProperties() {
         return this._odm ? this._odm.properties : [];
+    }
+    /**
+     * @returns {object}
+     */
+    getOdm() {
+        return this._odm || {};
     }
     /**
      * @returns {ReferenceInterface[]}

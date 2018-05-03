@@ -4,13 +4,17 @@ import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
 export declare class Repository<T extends BaseDocument> {
     protected documentType: any;
-    protected documentManager: DocumentManager;
+    protected documentManager: DocumentManager | undefined;
     protected collection: Collection;
     /**
      * @param {Type} documentType
      * @param {DocumentManager} documentManager
      */
-    constructor(documentType: any, documentManager: DocumentManager);
+    constructor(documentType: any, documentManager?: DocumentManager | undefined);
+    /**
+     * @param {DocumentManager} documentManager
+     */
+    setDocumentManager(documentManager: DocumentManager): void;
     /**
      * @return {string}
      */

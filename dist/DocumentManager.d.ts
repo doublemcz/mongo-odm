@@ -9,7 +9,7 @@ export declare class DocumentManager {
     /** @type {object} Object with Repositories */
     private repositories;
     /** @type {Promise<Db>} */
-    private db;
+    private readonly db;
     /**
      * @param {Promise<Db>} mongoClient
      * @param {DocumentManagerOptions} options

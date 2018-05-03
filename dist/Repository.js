@@ -11,7 +11,16 @@ class Repository {
     constructor(documentType, documentManager) {
         this.documentType = documentType;
         this.documentManager = documentManager;
-        documentManager
+        if (documentManager) {
+            this.setDocumentManager(documentManager);
+        }
+    }
+    /**
+     * @param {DocumentManager} documentManager
+     */
+    setDocumentManager(documentManager) {
+        this.documentManager = documentManager;
+        this.documentManager
             .getDb()
             .then((db) => {
             this.collection = db.collection(this.getCollectionName());
@@ -261,6 +270,9 @@ class Repository {
      * @returns {undefined}
      */
     async checkCollection() {
+        if (!this.documentManager) {
+            throw new Error('Document manager is not set');
+        }
         // We need to wait until the database is initialized
         await this.documentManager.getDb();
         if (!this.collection) {
@@ -273,6 +285,9 @@ class Repository {
      * @returns {BaseDocument}
      */
     async populateOne(document, populate) {
+        if (!this.documentManager) {
+            throw new Error('Document manager is not set');
+        }
         const references = document.getOdmReferences();
         for (const populateProperty of populate) {
             if (!references[populateProperty]) {
@@ -327,6 +342,9 @@ class Repository {
      * @returns {BaseDocument}
      */
     async populateMany(documents, populate) {
+        if (!this.documentManager) {
+            throw new Error('Document manager is not set');
+        }
         if (!documents.length) {
             return documents;
         }

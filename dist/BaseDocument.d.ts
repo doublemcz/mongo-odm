@@ -7,14 +7,19 @@ export declare abstract class BaseDocument {
      * @param {Object} properties
      */
     constructor(properties?: any);
+    protected mergeOdm(): void;
     /**
      * @returns {object}
      */
     toObject(): any;
     /**
-     * @returns {any[]}
+     * @returns {object[]}
      */
     getOdmProperties(): any[];
+    /**
+     * @returns {object}
+     */
+    getOdm(): OdmInterface;
     /**
      * @returns {ReferenceInterface[]}
      */

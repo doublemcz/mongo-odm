@@ -217,7 +217,6 @@ describe('Repository', () => {
     const customRepository = documentManager.getRepository<UserSomethingTest>(UserSomethingTest);
     await customRepository.create({test: 'test2'});
     const result = await customRepository.findOneBy({test: 'test2'});
-    console.log(result);
     if (!result) {
       throw new Error('The value should be in the database');
     }
