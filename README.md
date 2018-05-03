@@ -43,6 +43,18 @@ export class User extends BaseDocument {
 }
 ```
 
+You can set different collection name by `collectionName` property in decorator
+
+```
+@Collection({collectionName: 'a-name'})
+
+```
+
+Script auto generates lisp-case (kebab-case) for any name automatically
+```
+class UserAddress extends ... => collection name 'user-address'
+```
+
 
 ## CRUD
 

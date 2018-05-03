@@ -32,7 +32,7 @@ export abstract class BaseDocument {
   }
 
   /**
-   * @returns {any[]}
+   * @returns {object[]}
    */
   public getOdmProperties(): any[] {
     return this._odm ? this._odm.properties : [];

@@ -1,10 +1,9 @@
 import { Db, MongoClient, MongoClientOptions } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
-import * as fs from 'fs';
 import { Repository } from './Repository';
-import * as path from 'path';
 import { isFunction, isString } from 'util';
-import { stringify } from 'querystring';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class DocumentManager {
 
@@ -13,7 +12,7 @@ export class DocumentManager {
   /** @type {object} Object with Repositories */
   private repositories: any = {};
   /** @type {Promise<Db>} */
-  private db: Promise<Db>;
+  private readonly db: Promise<Db>;
 
   /**
    * @param {Promise<Db>} mongoClient
