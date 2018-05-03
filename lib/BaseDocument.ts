@@ -16,6 +16,12 @@ export abstract class BaseDocument {
     for (const property of Object.keys(properties)) {
       _this[property] = properties[property];
     }
+
+    this.mergeOdm();
+  }
+
+  protected mergeOdm() {
+    Object.assign(this._odm, (this as any).__proto__.constructor._odm);
   }
 
   /**
@@ -36,6 +42,13 @@ export abstract class BaseDocument {
    */
   public getOdmProperties(): any[] {
     return this._odm ? this._odm.properties : [];
+  }
+
+  /**
+   * @returns {object}
+   */
+  public getOdm(): OdmInterface {
+    return this._odm || {};
   }
 
   /**

@@ -165,6 +165,34 @@ const usersCount = await userRepository.count();
 const youngUserCount = await userRepository.count({age: 29');
 ```
 
+## Custom repository
+You can specify your own class for a type
+```
+## Repository class
+import { BaseDocument, Repository } from '../../lib';
+import { FindOneOptions } from 'mongodb';
+
+export class UserRepository<T extends BaseDocument> extends Repository<T> {
+
+  public async findOneBy(where: any = {}, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
+    const user = (await super.findOneBy(where, populate, options) as any);
+    if (user) {
+      // i.e. LOG WE FOUND THE USER
+    }
+
+    return something;
+  }
+
+}
+
+## Model
+@Collection({customRepository: UserRepository})
+export class User {
+  ...
+}
+
+```
+
 ### Hooks
 We support preCreate and postCreate hooks. They don't need any decorator due to 'hardcoded' name for simplicity. 
 If there is such name, repository will call this method.
@@ -185,7 +213,6 @@ class User extends BaseDocument {
 
 
 ## Future
-- custom repositories
 - delete and update hooks (pre, post)
 - validations
 - field name translation (custom db fields)

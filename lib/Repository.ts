@@ -19,8 +19,18 @@ export class Repository<T extends BaseDocument> {
    * @param {Type} documentType
    * @param {DocumentManager} documentManager
    */
-  public constructor(protected documentType: any, protected documentManager: DocumentManager) {
-    documentManager
+  public constructor(protected documentType: any, protected documentManager?: DocumentManager) {
+    if (documentManager) {
+      this.setDocumentManager(documentManager);
+    }
+  }
+
+  /**
+   * @param {DocumentManager} documentManager
+   */
+  public setDocumentManager(documentManager: DocumentManager) {
+    this.documentManager = documentManager;
+    this.documentManager
       .getDb()
       .then((db: Db) => {
         this.collection = db.collection(this.getCollectionName());
@@ -313,6 +323,10 @@ export class Repository<T extends BaseDocument> {
    * @returns {undefined}
    */
   protected async checkCollection() {
+    if (!this.documentManager) {
+      throw new Error('Document manager is not set');
+    }
+
     // We need to wait until the database is initialized
     await this.documentManager.getDb();
 
@@ -327,6 +341,10 @@ export class Repository<T extends BaseDocument> {
    * @returns {BaseDocument}
    */
   private async populateOne(document: BaseDocument, populate: string[]): Promise<BaseDocument> {
+    if (!this.documentManager) {
+      throw new Error('Document manager is not set');
+    }
+
     const references = document.getOdmReferences();
     for (const populateProperty of populate) {
       if (!references[populateProperty]) {
@@ -386,6 +404,10 @@ export class Repository<T extends BaseDocument> {
    * @returns {BaseDocument}
    */
   private async populateMany(documents: BaseDocument[], populate: string[]): Promise<BaseDocument[]> {
+    if (!this.documentManager) {
+      throw new Error('Document manager is not set');
+    }
+
     if (!documents.length) {
       return documents;
     }

@@ -22,6 +22,7 @@ export function Collection(decoratorOptions: CollectionDecorators = {}) {
 
 export type CollectionDecorators = {
   collectionName?: string;
+  customRepository?: any;
 }
 
 function createCollectionName(name: string) {

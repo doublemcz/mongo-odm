@@ -135,8 +135,24 @@ export class DocumentManager {
   /**
    * @param {any} type A type of an inherited Document from BaseDocument
    */
-  private createRepository<T extends BaseDocument>(type: any) {
-    const repository = new Repository<T>(type, this);
+  private createRepository<T extends BaseDocument>(type: any): Repository<T> {
+    let repository;
+    const typeInstance = new type();
+    if (typeInstance.getOdm().customRepository) {
+      // You can pass function or created instance of the repository
+      if (typeof typeInstance.getOdm().customRepository === 'object') {
+        repository = typeInstance.getOdm().customRepository;
+        repository.setDocumentManager(this);
+      } else if (typeof typeInstance.getOdm().customRepository === 'function') {
+        const customClass = typeInstance.getOdm().customRepository;
+        repository = new customClass(type, this);
+      } else {
+        throw new Error('Do not know what the repository is. You must give me type or instance');
+      }
+    } else {
+      repository = new Repository<T>(type, this);
+    }
+
     this.repositories[type.name] = repository;
 
     return repository;

@@ -3,6 +3,7 @@ import 'mocha';
 import { User } from './documents/User';
 import { Repository } from '../lib';
 import { documentManager } from './core/connection';
+import { UserSomethingTest } from './documents/UserSomethingTest';
 
 describe('Repository', () => {
 
@@ -210,6 +211,18 @@ describe('Repository', () => {
     const userRepository = documentManager.getRepository<User>(User);
     const foundUsersCount = await userRepository.count({age: 29});
     expect(foundUsersCount).greaterThan(0);
+  });
+
+  it('should test result from find in custom repository', async () => {
+    const customRepository = documentManager.getRepository<UserSomethingTest>(UserSomethingTest);
+    await customRepository.create({test: 'test2'});
+    const result = await customRepository.findOneBy({test: 'test2'});
+    console.log(result);
+    if (!result) {
+      throw new Error('The value should be in the database');
+    }
+
+    expect(result.test).eq('CHANGED!');
   });
 
 });
