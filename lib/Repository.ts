@@ -49,7 +49,7 @@ export class Repository<T extends BaseDocument> {
    * @returns {string}
    */
   public canPopulate(property: string) {
-    const document =  new this.documentType();
+    const document = new this.documentType();
     const references = document.getOdmReferences();
 
     return !!references[property];
@@ -287,6 +287,48 @@ export class Repository<T extends BaseDocument> {
    */
   public async count(filter: any = {}) {
     return this.collection.count(filter);
+  }
+
+  /**
+   * @param {string} expression A field that should be summarized - field or an expression
+   * @param {object} filter
+   * @returns {Promise<number>}
+   */
+  public sum(expression: string, filter: any = {}): Promise<number> {
+    const pipeline: any = [];
+    if (filter) {
+      pipeline.push({
+        $match: filter
+      })
+    }
+
+    if (isString(expression) && !expression.startsWith('$')) {
+      expression = '$' + expression;
+
+      pipeline.push({
+        $group: {
+          _id: null,
+          result: {$sum: expression}
+        }
+      });
+    } else {
+      pipeline.push({$group: expression});
+    }
+
+    return new Promise((resolve, reject) => {
+      const cursor = this.collection.aggregate(pipeline);
+      cursor.next((err, row) => {
+        if (err) {
+          return reject(err);
+        }
+
+        if (!row) {
+          return resolve(0);
+        }
+
+        resolve(row.result);
+      });
+    });
   }
 
   /**

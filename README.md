@@ -165,6 +165,14 @@ const usersCount = await userRepository.count();
 const youngUserCount = await userRepository.count({age: 29');
 ```
 
+### Sum
+```
+const totalAgeOfAllUsers = await userRepository.sum('age');
+
+// With where
+const sum = await userRepository.sum('age', {age: { $gt: 30}}');
+```
+
 ## Custom repository
 You can specify your own class for a type
 ```

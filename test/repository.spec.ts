@@ -4,6 +4,7 @@ import { User } from './documents/User';
 import { Repository } from '../lib';
 import { documentManager } from './core/connection';
 import { UserSomethingTest } from './documents/UserSomethingTest';
+import { SumEntity } from './documents/SumEntity';
 
 describe('Repository', () => {
 
@@ -223,5 +224,20 @@ describe('Repository', () => {
 
     expect(result.test).eq('CHANGED!');
   });
+
+  it('should test sum', async () => {
+    const sumRepository = documentManager.getRepository<SumEntity>(SumEntity);
+    await sumRepository.create({someNumber: 1});
+    await sumRepository.create({someNumber: 1});
+    await sumRepository.create({someNumber: 2, filter: 'test'});
+    const sum = await sumRepository.sum('someNumber');
+
+    expect(sum).to.be.equal(4);
+
+    const sumWithFilter = await sumRepository.sum('someNumber', {filter: 'test'});
+
+    expect(sumWithFilter).to.be.equal(2);
+  });
+
 
 });

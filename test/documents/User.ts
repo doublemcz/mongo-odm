@@ -13,7 +13,7 @@ export class User extends BaseDocument {
   @Property()
   public fullName: string;
 
-  @Property({test: 1})
+  @Property()
   public age: number;
 
   @OneToOne({targetDocument: 'Car', referencedField: 'user'})
