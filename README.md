@@ -191,7 +191,7 @@ cursor.next((err: any, row: any) => {
 ## Custom repository
 You can specify your own class for a type
 ```
-## Repository class
+# custom-repository.ts
 import { BaseDocument, Repository } from '../../lib';
 import { FindOneOptions } from 'mongodb';
 
@@ -208,7 +208,7 @@ export class UserRepository<T extends BaseDocument> extends Repository<T> {
 
 }
 
-## Model
+# user.ts
 @Collection({customRepository: UserRepository})
 export class User {
   ...
@@ -225,6 +225,9 @@ We support all pre/post create/update/delete hooks. They need decorator as follo
  - @PostUpdate
  - @PreDelete
  - @PostDelete
+ 
+All hooks are applied on every object found during 
+all operations of find, update, delete excluding native commands.
 
 ```
 class User extends BaseDocument {
