@@ -173,6 +173,21 @@ const totalAgeOfAllUsers = await userRepository.sum('age');
 const sum = await userRepository.sum('age', {age: { $gt: 30}}');
 ```
 
+### Aggregate
+```
+const cursor = await aggregationRepository.aggregate([{
+  $group: {_id: null, sum: {$sum: '$someNumber'}}
+}]);
+
+cursor.next((err: any, row: any) => {
+  if (err) {
+    throw err;
+  }
+
+  // row.sum === 20
+});
+```
+
 ## Custom repository
 You can specify your own class for a type
 ```

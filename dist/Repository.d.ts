@@ -1,4 +1,4 @@
-import { Collection, CommonOptions, DeleteWriteOpResultObject, FindOneOptions, UpdateWriteOpResult } from 'mongodb';
+import { AggregationCursor, Collection, CommonOptions, DeleteWriteOpResultObject, FindOneOptions, UpdateWriteOpResult } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
@@ -107,6 +107,21 @@ export declare class Repository<T extends BaseDocument> {
      * @returns {Promise<number>}
      */
     count(filter?: any): Promise<number>;
+    /**
+     * @returns {AggregationCursor<Default>}
+     * @param pipeline
+     */
+    aggregate(pipeline: Object[]): AggregationCursor;
+    /**
+     * @returns {Collection}
+     */
+    getCollection(): Collection<any>;
+    /**
+     * @param {string} expression A field that should be summarized - field or an expression
+     * @param {object} filter
+     * @returns {Promise<number>}
+     */
+    sum(expression: string, filter?: any): Promise<number>;
     /**
      * Returns initialized document with mapped properties
      *

@@ -1,4 +1,5 @@
 import {
+  AggregationCursor,
   Collection,
   CommonOptions,
   Db,
@@ -287,6 +288,21 @@ export class Repository<T extends BaseDocument> {
    */
   public async count(filter: any = {}) {
     return this.collection.count(filter);
+  }
+
+  /**
+   * @returns {AggregationCursor<Default>}
+   * @param pipeline
+   */
+  public aggregate(pipeline: Object[]): AggregationCursor {
+    return this.collection.aggregate(pipeline);
+  }
+
+  /**
+   * @returns {Collection}
+   */
+  public getCollection() {
+    return this.collection;
   }
 
   /**

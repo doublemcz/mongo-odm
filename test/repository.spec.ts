@@ -5,6 +5,7 @@ import { Repository } from '../lib';
 import { documentManager } from './core/connection';
 import { UserSomethingTest } from './documents/UserSomethingTest';
 import { SumEntity } from './documents/SumEntity';
+import { AggregationTest } from './documents/AggregationTest';
 
 describe('Repository', () => {
 
@@ -23,7 +24,8 @@ describe('Repository', () => {
   });
 
   it('should throw exception on non-registered document', async () => {
-    expect(documentManager.getRepository.bind(<any>(function test(){}))).to.throw();
+    expect(documentManager.getRepository.bind(<any>(function test() {
+    }))).to.throw();
   });
 
   it('should check if property can be populated', async () => {
@@ -239,5 +241,21 @@ describe('Repository', () => {
     expect(sumWithFilter).to.be.equal(2);
   });
 
+  it('should run basic aggregation', async () => {
+    const aggregationRepository = documentManager.getRepository<AggregationTest>(AggregationTest);
+    await aggregationRepository.create({someNumber: 10});
+    await aggregationRepository.create({someNumber: 10});
+    const cursor = await aggregationRepository.aggregate([{
+      $group: {_id: null, sum: {$sum: '$someNumber'}}
+    }]);
+
+    cursor.next((err: any, row: any) => {
+      if (err) {
+        throw err;
+      }
+
+      expect(row.sum).to.be.equal(20);
+    });
+  });
 
 });

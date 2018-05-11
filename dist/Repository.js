@@ -241,6 +241,56 @@ class Repository {
         return this.collection.count(filter);
     }
     /**
+     * @returns {AggregationCursor<Default>}
+     * @param pipeline
+     */
+    aggregate(pipeline) {
+        return this.collection.aggregate(pipeline);
+    }
+    /**
+     * @returns {Collection}
+     */
+    getCollection() {
+        return this.collection;
+    }
+    /**
+     * @param {string} expression A field that should be summarized - field or an expression
+     * @param {object} filter
+     * @returns {Promise<number>}
+     */
+    sum(expression, filter = {}) {
+        const pipeline = [];
+        if (filter) {
+            pipeline.push({
+                $match: filter
+            });
+        }
+        if (util_1.isString(expression) && !expression.startsWith('$')) {
+            expression = '$' + expression;
+            pipeline.push({
+                $group: {
+                    _id: null,
+                    result: { $sum: expression }
+                }
+            });
+        }
+        else {
+            pipeline.push({ $group: expression });
+        }
+        return new Promise((resolve, reject) => {
+            const cursor = this.collection.aggregate(pipeline);
+            cursor.next((err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+                if (!row) {
+                    return resolve(0);
+                }
+                resolve(row.result);
+            });
+        });
+    }
+    /**
      * Returns initialized document with mapped properties
      *
      * @param {object} result
