@@ -45,6 +45,14 @@ export abstract class BaseDocument {
   }
 
   /**
+   * @param {string} type
+   * @returns {boolean}
+   */
+  public hasHook(type: string) {
+    return this._odm && this._odm.hooks && this._odm.hooks[type];
+  }
+
+  /**
    * @returns {object}
    */
   public getOdm(): OdmInterface {
@@ -58,11 +66,19 @@ export abstract class BaseDocument {
     return this._odm ? this._odm.references : [];
   }
 
+  /**
+   * @returns {ReferenceInterface[]}
+   */
+  public getOdmHooks() {
+    return this._odm && this._odm.hooks ? this._odm.hooks : [];
+  }
+
 }
 
 export interface OdmInterface {
   references: any;
   properties: any;
+  hooks: any;
 }
 
 export interface ReferenceInterface {

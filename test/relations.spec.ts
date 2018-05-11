@@ -66,28 +66,6 @@ describe('Relations', () => {
     }
   });
 
-  it('should check repopulated property after update', async () => {
-    const userRepository = documentManager.getRepository<User>(User);
-    const addressRepository = documentManager.getRepository<Address>(Address);
-    const fullName = 'test populated/updated property';
-    let user;
-    const address = await addressRepository.create({city: 'Prague'});
-    const address2 = await addressRepository.create({city: 'Brno'});
-    await userRepository.create({fullName: fullName, address: address});
-    user = await userRepository.findOneBy({fullName}, ['address']);
-    if (!user) {
-      throw new Error('Error - document disappeared from database');
-    }
-
-    user = await userRepository.update(user, {address: address2._id});
-    if (user) {
-      expect(user.address).to.be.an.instanceof(Address);
-      expect((user.address as Address).city).to.be.equal('Brno');
-    } else {
-      throw new Error('Error - document disappeared from database');
-    }
-  });
-
   it('should check populated property after update', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const addressRepository = documentManager.getRepository<Address>(Address);

@@ -29,6 +29,12 @@ export declare class Repository<T extends BaseDocument> {
      */
     create(document: T | any): Promise<T>;
     /**
+     * @param {BaseDocument} document
+     * @param {string} type
+     * @param {object} params
+     */
+    handleHooks(document: BaseDocument, type: string, params?: any): void;
+    /**
      * @param {object} where
      * @param {string[]} populate
      * @param {FindOneOptions} options
@@ -57,17 +63,17 @@ export declare class Repository<T extends BaseDocument> {
      */
     findBy(query: any, populate?: string[], options?: FindOneOptions): Promise<T[]>;
     /**
-     * @param id
+     * @param idOrObject
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    delete(id: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
+    delete(idOrObject: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject | null>;
     /**
      * @param {FilterQuery} filter
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    deleteOneBy(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
+    deleteOneBy(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject | null>;
     /**
      * @param {FilterQuery} filter
      * @param {FindOneOptions} options
@@ -81,7 +87,7 @@ export declare class Repository<T extends BaseDocument> {
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(idOrObject: Identifier, updateObject: any, populate?: string[], updateWriteOpResultOutput?: any): Promise<T>;
+    update(idOrObject: Identifier, updateObject: any, populate?: string[], updateWriteOpResultOutput?: any): Promise<T | null>;
     /**
      * @param {BaseDocument} instance
      * @param {object} updateProperties

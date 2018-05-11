@@ -42,20 +42,6 @@ describe('Repository', () => {
     expect(user._id.toHexString()).be.a('string');
   });
 
-  it('check preCreate hook', async () => {
-    const userRepository = documentManager.getRepository<User>(User);
-    const user = await userRepository.create(new User({fullName: 'Tomas Krejci'}));
-    expect(user.createdAt).to.instanceOf(Date);
-    expect(user._id.toHexString()).be.a('string');
-  });
-
-  it('check postCreate hook', async () => {
-    const userRepository = documentManager.getRepository<User>(User);
-    const user = new User({fullName: 'postCreate'});
-    await userRepository.create(user);
-    expect(user.fullName).be.equal('postCreate Works!');
-  });
-
   it('should find document from find one by id', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'Robert Zaruba'});

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BaseDocument_1 = require("./BaseDocument");
 const bson_1 = require("bson");
 const util_1 = require("util");
+const utils_1 = require("./utils");
 class Repository {
     /**
      * @param {Type} documentType
@@ -50,18 +51,26 @@ class Repository {
             // We got plain object - we need to recreate object with correct instance
             document = new this.documentType(document);
         }
-        if (typeof document.preCreate === 'function') {
-            document.preCreate(this);
-        }
+        this.handleHooks(document, 'preCreate');
         const filteredObject = this.prepareObjectForSave(document);
         const result = await this.collection.insertOne(filteredObject);
         if (result.insertedId) {
             document._id = result.insertedId;
         }
-        if (typeof document.postCreate === 'function') {
-            document.postCreate(this);
-        }
+        this.handleHooks(document, 'postCreate');
         return document;
+    }
+    /**
+     * @param {BaseDocument} document
+     * @param {string} type
+     * @param {object} params
+     */
+    handleHooks(document, type, params = {}) {
+        if (document.hasHook(type)) {
+            for (const hook of document.getOdmHooks()[type]) {
+                document[hook](params);
+            }
+        }
     }
     /**
      * @param {object} where
@@ -119,7 +128,7 @@ class Repository {
             return [];
         }
         const result = [];
-        for (let item of resultArray) {
+        for (const item of resultArray) {
             result.push(this.mapResultProperties(item));
         }
         if (populate.length) {
@@ -128,13 +137,26 @@ class Repository {
         return result;
     }
     /**
-     * @param id
+     * @param idOrObject
      * @param {FindOneOptions} options
      * @returns {Promise<DeleteWriteOpResultObject>}
      */
-    async delete(id, options) {
+    async delete(idOrObject, options) {
         await this.checkCollection();
-        return await this.collection.deleteOne({ _id: this.getId(id) }, options);
+        let document;
+        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
+            document = idOrObject;
+        }
+        else {
+            document = await this.find(this.getId(idOrObject));
+            if (!document) {
+                return null;
+            }
+        }
+        this.handleHooks(document, 'preDelete');
+        const result = await this.collection.deleteOne({ _id: document._id }, options);
+        this.handleHooks(document, 'postDelete');
+        return result;
     }
     /**
      * @param {FilterQuery} filter
@@ -164,18 +186,34 @@ class Repository {
      */
     async update(idOrObject, updateObject, populate = [], updateWriteOpResultOutput = {}) {
         await this.checkCollection();
-        updateObject = this.prepareObjectForSave(updateObject);
-        const objectId = this.getId(idOrObject);
-        const updateWriteOpResult = await this.collection.updateOne({ _id: objectId }, { $set: updateObject });
-        Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
-        let foundInstance;
-        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
-            foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject, populate);
+        let document = null;
+        if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) {
+            document = await this.find(this.getId(idOrObject));
         }
         else {
-            foundInstance = this.find(objectId, populate);
+            document = idOrObject;
         }
-        return foundInstance;
+        if (!document) {
+            return null;
+        }
+        const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
+        for (const key of Object.keys(updateObject)) {
+            // Apply requested updates on fetched document
+            document[key] = updateObject[key];
+        }
+        // Apply hooks on document
+        this.handleHooks(document, 'preUpdate', { updateObject: updateObject, beforeChange: temp });
+        // Compare with temp document what changed in hooks
+        const preparedDocument = this.prepareObjectForSave(document);
+        const preparedTemp = this.prepareObjectForSave(temp);
+        updateObject = utils_1.difference(preparedDocument, preparedTemp);
+        if (Object.keys(updateObject).length) {
+            const updateWriteOpResult = await this.collection.updateOne({ _id: document._id }, { $set: updateObject });
+            Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
+        }
+        await this.updateInstanceAfterUpdate(document, updateObject, populate);
+        this.handleHooks(document, 'postUpdate', updateObject);
+        return document;
     }
     /**
      * @param {BaseDocument} instance

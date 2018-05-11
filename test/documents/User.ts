@@ -3,6 +3,7 @@ import { Log } from './Log';
 import { ObjectID } from 'bson';
 import { Car } from './Car';
 import { Address } from './Address';
+import { PostCreate, PostUpdate, PreCreate, PreUpdate } from '../../lib/decorators/hooks';
 
 @Collection()
 export class User extends BaseDocument {
@@ -31,21 +32,37 @@ export class User extends BaseDocument {
   @Property()
   public createdAt: Date;
 
-  private privateProperty = 'hidden';
-  public someUserMember = 'Hey!';
-
+  @PreCreate()
   public preCreate() {
     this.createdAt = new Date();
   }
 
-  public testMethod() {
-    return this.fullName;
-  }
-
+  @PostCreate()
   public postCreate() {
     if (this.fullName === 'postCreate') {
       this.fullName = 'postCreate Works!';
     }
+  }
+
+  @PreUpdate()
+  public preUpdate() {
+    if (this.fullName === 'preUpdateHookTest') {
+      this.fullName = 'preUpdateHookTest Works!';
+    }
+  }
+
+  @PostUpdate()
+  public postUpdate() {
+    if (this.fullName === 'postUpdateHookTest2') {
+      this.fullName = 'postUpdateHookTest Works!';
+    }
+  }
+
+  private privateProperty = 'hidden';
+  public someUserMember = 'Hey!';
+
+  public testMethod() {
+    return this.fullName;
   }
 
 }

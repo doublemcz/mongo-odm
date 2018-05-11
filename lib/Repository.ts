@@ -11,6 +11,7 @@ import { BaseDocument } from './BaseDocument';
 import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
 import { isArray, isObject, isString } from 'util';
+import { difference } from './utils';
 
 export class Repository<T extends BaseDocument> {
 
@@ -67,21 +68,29 @@ export class Repository<T extends BaseDocument> {
       document = new this.documentType(document);
     }
 
-    if (typeof document.preCreate === 'function') {
-      document.preCreate(this);
-    }
-
+    this.handleHooks(document, 'preCreate');
     const filteredObject = this.prepareObjectForSave(document);
     const result = await this.collection.insertOne(filteredObject);
     if (result.insertedId) {
       document._id = result.insertedId;
     }
 
-    if (typeof document.postCreate === 'function') {
-      document.postCreate(this);
-    }
+    this.handleHooks(document, 'postCreate');
 
     return document;
+  }
+
+  /**
+   * @param {BaseDocument} document
+   * @param {string} type
+   * @param {object} params
+   */
+  public handleHooks(document: BaseDocument, type: string, params: any = {}) {
+    if (document.hasHook(type)) {
+      for (const hook of document.getOdmHooks()[type]) {
+        (document as any)[hook](params);
+      }
+    }
   }
 
   /**
@@ -150,7 +159,7 @@ export class Repository<T extends BaseDocument> {
     }
 
     const result: any[] = [];
-    for (let item of resultArray) {
+    for (const item of resultArray) {
       result.push(this.mapResultProperties(item));
     }
 
@@ -162,14 +171,28 @@ export class Repository<T extends BaseDocument> {
   }
 
   /**
-   * @param id
+   * @param idOrObject
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async delete(id: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async delete(idOrObject: Identifier, options?: CommonOptions): Promise<DeleteWriteOpResultObject | null> {
     await this.checkCollection();
 
-    return await this.collection.deleteOne({_id: this.getId(id)}, options);
+    let document;
+    if (idOrObject instanceof BaseDocument) {
+      document = idOrObject;
+    } else {
+      document = await this.find(this.getId(idOrObject)) as T;
+      if (!document) {
+        return null;
+      }
+    }
+
+    this.handleHooks(document, 'preDelete');
+    const result = await this.collection.deleteOne({_id: document._id}, options);
+    this.handleHooks(document, 'postDelete');
+
+    return result;
   }
 
   /**
@@ -177,7 +200,7 @@ export class Repository<T extends BaseDocument> {
    * @param {FindOneOptions} options
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
-  public async deleteOneBy(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject> {
+  public async deleteOneBy(filter: any, options?: CommonOptions): Promise<DeleteWriteOpResultObject | null> {
     await this.checkCollection();
     const document = await this.collection.findOne(filter);
 
@@ -202,21 +225,40 @@ export class Repository<T extends BaseDocument> {
    * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(idOrObject: Identifier, updateObject: any, populate: string[] = [], updateWriteOpResultOutput: any = {}): Promise<T> {
+  public async update(idOrObject: Identifier, updateObject: any, populate: string[] = [], updateWriteOpResultOutput: any = {}): Promise<T | null> {
     await this.checkCollection();
-    updateObject = this.prepareObjectForSave(updateObject);
-
-    const objectId = this.getId(idOrObject);
-    const updateWriteOpResult = await this.collection.updateOne({_id: objectId}, {$set: updateObject});
-    Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
-    let foundInstance;
-    if (idOrObject instanceof BaseDocument) {
-      foundInstance = await this.updateInstanceAfterUpdate(idOrObject, updateObject, populate);
+    let document: BaseDocument | null = null;
+    if (!(idOrObject instanceof BaseDocument)) {
+      document = await this.find(this.getId(idOrObject));
     } else {
-      foundInstance = this.find(objectId, populate);
+      document = idOrObject;
     }
 
-    return foundInstance;
+    if (!document) {
+      return null;
+    }
+
+    const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
+    for (const key of Object.keys(updateObject)) {
+      // Apply requested updates on fetched document
+      (document as any)[key] = updateObject[key];
+    }
+
+    // Apply hooks on document
+    this.handleHooks(document as BaseDocument, 'preUpdate', {updateObject: updateObject, beforeChange: temp});
+    // Compare with temp document what changed in hooks
+    const preparedDocument = this.prepareObjectForSave(document);
+    const preparedTemp = this.prepareObjectForSave(temp);
+    updateObject = difference(preparedDocument, preparedTemp);
+    if (Object.keys(updateObject).length) {
+      const updateWriteOpResult = await this.collection.updateOne({_id: document._id}, {$set: updateObject});
+      Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
+    }
+
+    await this.updateInstanceAfterUpdate(document, updateObject, populate);
+    this.handleHooks(document, 'postUpdate', updateObject);
+
+    return document as T;
   }
 
   /**

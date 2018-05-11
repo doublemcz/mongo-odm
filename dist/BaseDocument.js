@@ -32,6 +32,13 @@ class BaseDocument {
         return this._odm ? this._odm.properties : [];
     }
     /**
+     * @param {string} type
+     * @returns {boolean}
+     */
+    hasHook(type) {
+        return this._odm && this._odm.hooks && this._odm.hooks[type];
+    }
+    /**
      * @returns {object}
      */
     getOdm() {
@@ -42,6 +49,12 @@ class BaseDocument {
      */
     getOdmReferences() {
         return this._odm ? this._odm.references : [];
+    }
+    /**
+     * @returns {ReferenceInterface[]}
+     */
+    getOdmHooks() {
+        return this._odm && this._odm.hooks ? this._odm.hooks : [];
     }
 }
 exports.BaseDocument = BaseDocument;

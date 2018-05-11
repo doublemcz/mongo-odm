@@ -217,26 +217,66 @@ export class User {
 ```
 
 ### Hooks
-We support preCreate and postCreate hooks. They don't need any decorator due to 'hardcoded' name for simplicity. 
-If there is such name, repository will call this method.
+We support all pre/post create/update/delete hooks. They need decorator as follows:
+
+ - @PreCreate
+ - @PostCreate
+ - @PreUpdate
+ - @PostUpdate
+ - @PreDelete
+ - @PostDelete
 
 ```
 class User extends BaseDocument {
 
-  preCreate(repository: Repository) {
+  @PreCreate()
+  preCreate() {
     this.createdAt = new Date();
   }
   
-  postCreate(repository: Repository) {
+  @PostCreate()
+  postCreate() {
     elasticSearch.put(....);
   }
+  
+  @PreUpdate()
+  preUpdate() {
+    this.updatedAt = new Date();
+  }
+  
+  
+  @PostUpdate()
+  postUpdate() {
+     logger.log('Updated ID:' + this._id);
+  }
+  
+  @PostDelete()
+  postDelete() {
+    imageRepository.removeFromFileSystem(this)
+  }
+  
+}
+
+```
+
+You can have as many hooks as you need as
+
+```
+
+@PostCreate()
+logAfterCreate() {
+  // logging stuff
+}
+
+@PostCreate() 
+doAnotherThings() {
+  // another amazing stuff
 }
 
 ```
 
 
 ## Future
-- delete and update hooks (pre, post)
 - validations
 - field name translation (custom db fields)
 - possibility to specify where in @OneToOne or @OneToMany

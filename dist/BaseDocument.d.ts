@@ -17,6 +17,11 @@ export declare abstract class BaseDocument {
      */
     getOdmProperties(): any[];
     /**
+     * @param {string} type
+     * @returns {boolean}
+     */
+    hasHook(type: string): any;
+    /**
      * @returns {object}
      */
     getOdm(): OdmInterface;
@@ -24,10 +29,15 @@ export declare abstract class BaseDocument {
      * @returns {ReferenceInterface[]}
      */
     getOdmReferences(): any;
+    /**
+     * @returns {ReferenceInterface[]}
+     */
+    getOdmHooks(): any;
 }
 export interface OdmInterface {
     references: any;
     properties: any;
+    hooks: any;
 }
 export interface ReferenceInterface {
     targetDocument: string;
