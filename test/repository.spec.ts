@@ -42,6 +42,22 @@ describe('Repository', () => {
     expect(user._id.toHexString()).be.a('string');
   });
 
+  it('should find user by string id', async() => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create({fullName: 'userByStringId'});
+    expect(user).to.be.instanceOf(User);
+    const user2 = await userRepository.find(user._id.toHexString());
+    expect(user2._id.toHexString()).to.be.equal(user._id.toHexString());
+  });
+
+  it('should find user by object id', async() => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create({fullName: 'userByObjectId'});
+    expect(user).to.be.instanceOf(User);
+    const user2 = await userRepository.find(user._id);
+    expect(user2._id.toHexString()).to.be.equal(user._id.toHexString());
+  });
+
   it('should find document from find one by id', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     const user = new User({fullName: 'Robert Zaruba'});
