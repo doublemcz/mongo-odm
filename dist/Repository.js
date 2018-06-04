@@ -94,6 +94,9 @@ class Repository {
      */
     async find(id, populate = [], options = {}) {
         await this.checkCollection();
+        if (util_1.isString(id) && bson_1.ObjectID.isValid(id)) {
+            id = new bson_1.ObjectID(id);
+        }
         const rawData = await this.collection.findOne({ _id: id }, options);
         if (!rawData) {
             return null;
