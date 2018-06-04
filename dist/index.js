@@ -10,3 +10,4 @@ __export(require("./decorators/Collection"));
 __export(require("./decorators/OneToOne"));
 __export(require("./decorators/OneToMany"));
 __export(require("./decorators/Property"));
+__export(require("./decorators/hooks"));
