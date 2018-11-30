@@ -275,7 +275,7 @@ export class Repository<T extends BaseDocument> {
     const references = instance.getOdmReferences();
 
     for (const property of Object.keys(updateProperties)) {
-      if (references[property]) {
+      if (references && references[property]) {
         instance = (instance as any);
         // If we passed populated property of a document and we updated reference id, we need to repopulate
         if (!!updateProperties[property] && !!instance[property] && isObject((instance as any)[property]) && !isArray((instance as any)[property])) {
