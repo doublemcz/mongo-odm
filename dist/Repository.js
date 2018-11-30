@@ -227,7 +227,7 @@ class Repository {
     async updateInstanceAfterUpdate(instance, updateProperties, populate) {
         const references = instance.getOdmReferences();
         for (const property of Object.keys(updateProperties)) {
-            if (references[property]) {
+            if (references && references[property]) {
                 instance = instance;
                 // If we passed populated property of a document and we updated reference id, we need to repopulate
                 if (!!updateProperties[property] && !!instance[property] && util_1.isObject(instance[property]) && !util_1.isArray(instance[property])) {
