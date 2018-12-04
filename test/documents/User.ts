@@ -3,7 +3,7 @@ import { Log } from './Log';
 import { ObjectID } from 'bson';
 import { Car } from './Car';
 import { Address } from './Address';
-import { PostCreate, PostUpdate, PreCreate, PreUpdate } from '../../lib/decorators/hooks';
+import { PostCreate, PostUpdate, PreCreate, PreUpdate } from '../../lib';
 
 @Collection()
 export class User extends BaseDocument {
@@ -31,6 +31,9 @@ export class User extends BaseDocument {
 
   @Property()
   public createdAt: Date;
+
+  @Property({isPrivate: true})
+  public password: string;
 
   @PreCreate()
   public preCreate() {

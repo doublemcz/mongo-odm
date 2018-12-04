@@ -174,6 +174,14 @@ export declare class Repository<T extends BaseDocument> {
      * @returns {object}
      */
     private prepareObjectForSave(objectToBeSaved);
+    /**
+     * @param array
+     */
     private getEntityIds(array);
+    /**
+     * It helps when someone send there an object instead of _id
+     * @param {object} query
+     */
+    private prepareQuery(query);
 }
 export declare type Identifier = BaseDocument | ObjectID | string;

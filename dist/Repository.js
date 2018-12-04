@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongodb_1 = require("mongodb");
 const BaseDocument_1 = require("./BaseDocument");
 const bson_1 = require("bson");
 const util_1 = require("util");
@@ -80,6 +81,7 @@ class Repository {
      */
     async findOneBy(where = {}, populate = [], options = {}) {
         await this.checkCollection();
+        where = this.prepareQuery(where);
         const rawData = await this.collection.findOne(where, options);
         if (!rawData) {
             return null;
@@ -124,6 +126,7 @@ class Repository {
      */
     async findBy(query, populate = [], options = {}) {
         await this.checkCollection();
+        query = this.prepareQuery(query);
         // @TODO find out why `find` is @deprecated
         const resultCursor = await this.collection.find(query, options);
         const resultArray = await resultCursor.toArray();
@@ -604,6 +607,9 @@ class Repository {
         }
         return result;
     }
+    /**
+     * @param array
+     */
     getEntityIds(array) {
         const result = [];
         for (const item of array) {
@@ -618,6 +624,18 @@ class Repository {
             }
         }
         return result;
+    }
+    /**
+     * It helps when someone send there an object instead of _id
+     * @param {object} query
+     */
+    prepareQuery(query) {
+        for (const key of Object.keys(query)) {
+            if (query[key] instanceof BaseDocument_1.BaseDocument && query[key]._id) {
+                query[key] = query[key]._id instanceof mongodb_1.ObjectId ? query[key]._id : new mongodb_1.ObjectId(query[key]._id);
+            }
+        }
+        return query;
     }
 }
 exports.Repository = Repository;

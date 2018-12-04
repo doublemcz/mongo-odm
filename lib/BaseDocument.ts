@@ -20,6 +20,9 @@ export abstract class BaseDocument {
     this.mergeOdm();
   }
 
+  /**
+   * @return {undefined}
+   */
   protected mergeOdm() {
     Object.assign(this._odm, (this as any).__proto__.constructor._odm);
   }
@@ -31,6 +34,25 @@ export abstract class BaseDocument {
     const result: any = {};
     const _this = (this as any);
     for (const property in this.getOdmProperties()) {
+      result[property] = _this[property];
+    }
+
+    return result;
+  }
+
+  /**
+   * @return {object}
+   */
+  public toJSON(): any {
+    const result: any = {};
+    const _this = (this as any);
+
+    const properties = this.getOdmProperties();
+    for (const property in properties) {
+      if (properties[property].isPrivate) {
+        continue;
+      }
+
       result[property] = _this[property];
     }
 

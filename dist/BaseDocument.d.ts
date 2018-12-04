@@ -7,11 +7,18 @@ export declare abstract class BaseDocument {
      * @param {Object} properties
      */
     constructor(properties?: any);
+    /**
+     * @return {undefined}
+     */
     protected mergeOdm(): void;
     /**
      * @returns {object}
      */
     toObject(): any;
+    /**
+     * @return {object}
+     */
+    toJSON(): any;
     /**
      * @returns {object[]}
      */

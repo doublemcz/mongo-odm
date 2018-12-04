@@ -11,6 +11,9 @@ class BaseDocument {
         }
         this.mergeOdm();
     }
+    /**
+     * @return {undefined}
+     */
     mergeOdm() {
         Object.assign(this._odm, this.__proto__.constructor._odm);
     }
@@ -21,6 +24,21 @@ class BaseDocument {
         const result = {};
         const _this = this;
         for (const property in this.getOdmProperties()) {
+            result[property] = _this[property];
+        }
+        return result;
+    }
+    /**
+     * @return {object}
+     */
+    toJSON() {
+        const result = {};
+        const _this = this;
+        const properties = this.getOdmProperties();
+        for (const property in properties) {
+            if (properties[property].isPrivate) {
+                continue;
+            }
             result[property] = _this[property];
         }
         return result;

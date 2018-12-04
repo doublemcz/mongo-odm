@@ -18,6 +18,17 @@ describe('Model', () => {
     expect(Object.keys(user.toObject())).not.contains('privateProperty');
   });
 
+  it('should not contain private fields in toObject', async () => {
+    const user = new User();
+    expect(Object.keys(user.toObject())).not.contains('privateProperty');
+  });
+
+  it('should not contain isPrivate fields in toJSON', async () => {
+    const user = new User();
+    user.password = 'test';
+    expect(Object.keys(user.toJSON())).not.contains('password');
+  });
+
   it('should check custom collection name', async () => {
     const articleCoverRepository = documentManager.getRepository<ArticleCover>(ArticleCover);
     expect(articleCoverRepository.getCollectionName()).eq('article-cover');
