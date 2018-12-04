@@ -4,7 +4,7 @@ import {
   CommonOptions,
   Db,
   DeleteWriteOpResultObject,
-  FindOneOptions,
+  FindOneOptions, ObjectId,
   UpdateWriteOpResult
 } from 'mongodb';
 import { BaseDocument } from './BaseDocument';
@@ -101,7 +101,7 @@ export class Repository<T extends BaseDocument> {
    */
   public async findOneBy(where: any = {}, populate: string[] = [], options: FindOneOptions = {}): Promise<T | null> {
     await this.checkCollection();
-
+    where = this.prepareQuery(where);
     const rawData = await this.collection.findOne<T>(where, options);
     if (!rawData) {
       return null;
@@ -155,6 +155,7 @@ export class Repository<T extends BaseDocument> {
   public async findBy(query: any, populate: string[] = [], options: FindOneOptions = {}): Promise<T[]> {
     await this.checkCollection();
 
+    query = this.prepareQuery(query);
     // @TODO find out why `find` is @deprecated
     const resultCursor = await this.collection.find<T[]>(query, options);
     const resultArray: any[] = await resultCursor.toArray();
@@ -696,6 +697,9 @@ export class Repository<T extends BaseDocument> {
     return result;
   }
 
+  /**
+   * @param array
+   */
   private getEntityIds(array: any) {
     const result: any = [];
     for (const item of array) {
@@ -710,6 +714,21 @@ export class Repository<T extends BaseDocument> {
 
     return result;
   }
+
+  /**
+   * It helps when someone send there an object instead of _id
+   * @param {object} query
+   */
+  private prepareQuery(query: any) {
+    for (const key of Object.keys(query)) {
+      if (query[key] instanceof BaseDocument && query[key]._id) {
+        query[key] = query[key]._id instanceof ObjectId ? query[key]._id : new ObjectId(query[key]._id);
+      }
+    }
+
+    return query;
+  }
+
 }
 
 class ArrayCollection extends Array {

@@ -1,7 +1,7 @@
-import { expect } from 'chai';
 import 'mocha';
+import { expect } from 'chai';
+
 import { User } from './documents/User';
-import { Repository } from '../lib';
 import { documentManager } from './core/connection';
 import { UserSomethingTest } from './documents/UserSomethingTest';
 import { SumEntity } from './documents/SumEntity';
@@ -258,6 +258,17 @@ describe('Repository', () => {
 
       expect(row.sum).to.be.equal(20);
     });
+  });
+
+  it('should be return result from db when an object is in where instead of id', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'findByObjectInsteadOfId'}));
+    const theSameUser = await userRepository.findOneBy({_id: user});
+    if (!theSameUser) {
+      throw new Error('findOneBy result is wrong, a record should be there!');
+    }
+
+    expect(theSameUser._id.toHexString()).eq(user._id.toHexString());
   });
 
 });
