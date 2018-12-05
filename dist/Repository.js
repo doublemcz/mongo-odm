@@ -190,7 +190,7 @@ class Repository {
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    async update(idOrObject, updateObject, populate = [], updateWriteOpResultOutput = {}) {
+    async update(idOrObject, updateObject = undefined, populate = [], updateWriteOpResultOutput = {}) {
         await this.checkCollection();
         let document = null;
         if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) {
@@ -202,6 +202,15 @@ class Repository {
         if (!document) {
             return null;
         }
+        let omitUpdateDiff = false;
+        if (updateObject === undefined) {
+            if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) {
+                throw new Error('You cannot use update this way. You must send an altered object as a first argument or you need to specify second argument object what should change');
+            }
+            omitUpdateDiff = true;
+            const dbRecord = await this.find(this.getId(idOrObject));
+            updateObject = utils_1.difference(idOrObject, dbRecord);
+        }
         const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
         for (const key of Object.keys(updateObject)) {
             // Apply requested updates on fetched document
@@ -209,10 +218,13 @@ class Repository {
         }
         // Apply hooks on document
         this.handleHooks(document, 'preUpdate', { updateObject: updateObject, beforeChange: temp });
-        // Compare with temp document what changed in hooks
-        const preparedDocument = this.prepareObjectForSave(document);
-        const preparedTemp = this.prepareObjectForSave(temp);
-        updateObject = utils_1.difference(preparedDocument, preparedTemp);
+        if (!omitUpdateDiff) {
+            // Compare with temp document what changed in hooks, if we send changed object without updateObject,
+            // we don't need to compute diff again
+            const preparedDocument = this.prepareObjectForSave(document);
+            const preparedTemp = this.prepareObjectForSave(temp);
+            updateObject = utils_1.difference(preparedDocument, preparedTemp);
+        }
         if (Object.keys(updateObject).length) {
             const updateWriteOpResult = await this.collection.updateOne({ _id: document._id }, { $set: updateObject });
             Object.assign(updateWriteOpResultOutput, updateWriteOpResult);

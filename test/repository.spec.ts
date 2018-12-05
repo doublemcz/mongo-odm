@@ -271,4 +271,17 @@ describe('Repository', () => {
     expect(theSameUser._id.toHexString()).eq(user._id.toHexString());
   });
 
+  it('should update record without specifying altering object', async() => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({fullName: 'withoutAlteringObject'}));
+    user.fullName = 'withoutAlteringObject2';
+    await userRepository.update(user);
+    const userToCheck = await userRepository.find(user._id);
+    if (!userToCheck) {
+      throw new Error('find result is wrong, a record should be there!');
+    }
+
+    expect(userToCheck.fullName).eq('withoutAlteringObject2');
+  });
+
 });

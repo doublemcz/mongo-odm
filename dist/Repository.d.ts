@@ -87,7 +87,7 @@ export declare class Repository<T extends BaseDocument> {
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    update(idOrObject: Identifier, updateObject: any, populate?: string[], updateWriteOpResultOutput?: any): Promise<T | null>;
+    update(idOrObject: Identifier, updateObject?: any, populate?: string[], updateWriteOpResultOutput?: any): Promise<T | null>;
     /**
      * @param {BaseDocument} instance
      * @param {object} updateProperties

@@ -6,7 +6,7 @@
 
 A typescript ODM based on native node.js Mongo library.
 
-## Installation 
+## Installation
 ```
 npm install --save mong-odm
 
@@ -35,7 +35,7 @@ export class User extends BaseDocument {
 
   @OneToOne({targetDocument: 'Car', referencedField: 'user'})
   public car: Car;
-  
+
   // If you don't specify `referencedField` it means you own the the reference IDs - you have array of address ids in your collection
   @OneToMany({targetDocument: 'Address'})
   public addresses: Address;
@@ -130,6 +130,11 @@ userRepository.update(ObjectId(...), { fullName: "new fullName"});
 // By model
 const user = await userRepository.find(...);
 userRepository.update(user, { fullName: "new fullName"});
+
+// By model changed directly without object with changes - repository will calculate changes itself
+const user = await userRepository.find(...);
+user.fullName = 'new fullName';
+userRepository.update(user);
 ```
 
 Also you can update a document by where:
@@ -225,8 +230,8 @@ We support all pre/post create/update/delete hooks. They need decorator as follo
  - @PostUpdate
  - @PreDelete
  - @PostDelete
- 
-All hooks are applied on every object found during 
+
+All hooks are applied on every object found during
 all operations of find, update, delete excluding native commands.
 
 ```
@@ -236,28 +241,28 @@ class User extends BaseDocument {
   preCreate() {
     this.createdAt = new Date();
   }
-  
+
   @PostCreate()
   postCreate() {
     elasticSearch.put(....);
   }
-  
+
   @PreUpdate()
   preUpdate() {
     this.updatedAt = new Date();
   }
-  
-  
+
+
   @PostUpdate()
   postUpdate() {
      logger.log('Updated ID:' + this._id);
   }
-  
+
   @PostDelete()
   postDelete() {
     imageRepository.removeFromFileSystem(this)
   }
-  
+
 }
 
 ```
@@ -271,7 +276,7 @@ logAfterCreate() {
   // logging stuff
 }
 
-@PostCreate() 
+@PostCreate()
 doAnotherThings() {
   // another amazing stuff
 }
