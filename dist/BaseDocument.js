@@ -18,15 +18,12 @@ class BaseDocument {
         Object.assign(this._odm, this.__proto__.constructor._odm);
     }
     /**
+     * @deprecated Use toJSON().
      * @returns {object}
      */
     toObject() {
-        const result = {};
-        const _this = this;
-        for (const property in this.getOdmProperties()) {
-            result[property] = _this[property];
-        }
-        return result;
+        // TODO decide what to do with this?
+        return this.toJSON();
     }
     /**
      * @return {object}
@@ -40,6 +37,10 @@ class BaseDocument {
                 continue;
             }
             result[property] = _this[property];
+        }
+        const references = this.getOdmReferences();
+        for (const referenceKey of Object.keys(references)) {
+            result[referenceKey] = _this[referenceKey];
         }
         return result;
     }

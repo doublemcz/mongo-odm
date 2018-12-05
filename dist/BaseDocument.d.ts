@@ -12,6 +12,7 @@ export declare abstract class BaseDocument {
      */
     protected mergeOdm(): void;
     /**
+     * @deprecated Use toJSON().
      * @returns {object}
      */
     toObject(): any;
