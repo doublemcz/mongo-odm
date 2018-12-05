@@ -47,6 +47,10 @@ describe('Repository', () => {
     const user = await userRepository.create({fullName: 'userByStringId'});
     expect(user).to.be.instanceOf(User);
     const user2 = await userRepository.find(user._id.toHexString());
+    if (!user2) {
+      throw new Error('find is not working');
+    }
+
     expect(user2._id.toHexString()).to.be.equal(user._id.toHexString());
   });
 
@@ -55,6 +59,10 @@ describe('Repository', () => {
     const user = await userRepository.create({fullName: 'userByObjectId'});
     expect(user).to.be.instanceOf(User);
     const user2 = await userRepository.find(user._id);
+    if (!user2) {
+      throw new Error('find is not working');
+    }
+
     expect(user2._id.toHexString()).to.be.equal(user._id.toHexString());
   });
 
@@ -169,10 +177,12 @@ describe('Repository', () => {
   it('should update document with document instance', async () => {
     const userRepository = documentManager.getRepository<User>(User);
     let user = await userRepository.create(new User({fullName: 'updateOneWithDocumentInstanceExpectInstance'}));
-    user = await userRepository.update(user, {age: 18});
-    if (user) {
-      expect(user.age).eq(18);
+    user = await userRepository.update(user, {age: 18}) as User;
+    if (!user) {
+      throw new Error('update is not working');
     }
+
+    expect(user.age).eq(18);
   });
 
   it('should update document with string id', async () => {
