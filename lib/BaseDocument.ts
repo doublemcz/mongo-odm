@@ -28,16 +28,12 @@ export abstract class BaseDocument {
   }
 
   /**
+   * @deprecated Use toJSON().
    * @returns {object}
    */
   public toObject(): any {
-    const result: any = {};
-    const _this = (this as any);
-    for (const property in this.getOdmProperties()) {
-      result[property] = _this[property];
-    }
-
-    return result;
+    // TODO decide what to do with this?
+    return this.toJSON();
   }
 
   /**
@@ -54,6 +50,11 @@ export abstract class BaseDocument {
       }
 
       result[property] = _this[property];
+    }
+
+    const references = this.getOdmReferences();
+    for (const referenceKey of Object.keys(references)) {
+      result[referenceKey] = _this[referenceKey];
     }
 
     return result;
