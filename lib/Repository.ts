@@ -251,7 +251,7 @@ export class Repository<T extends BaseDocument> {
 
       omitUpdateDiff = true;
       const dbRecord = await this.find(this.getId(idOrObject));
-      updateObject = difference(idOrObject, dbRecord);
+      updateObject = difference(idOrObject, JSON.parse(JSON.stringify(dbRecord)));
     }
 
     const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));

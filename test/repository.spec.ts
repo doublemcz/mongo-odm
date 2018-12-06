@@ -283,8 +283,11 @@ describe('Repository', () => {
 
   it('should update record without specifying altering object', async() => {
     const userRepository = documentManager.getRepository<User>(User);
-    const user = await userRepository.create(new User({fullName: 'withoutAlteringObject'}));
+    const someDate = new Date();
+    const someDateTimeStamp = Math.floor(someDate.getTime() / 1000);
+    const user = await userRepository.create(new User({fullName: 'withoutAlteringObject', someDate: someDate}));
     user.fullName = 'withoutAlteringObject2';
+    user.someDate.setSeconds(user.someDate.getSeconds() + 1);
     await userRepository.update(user);
     const userToCheck = await userRepository.find(user._id);
     if (!userToCheck) {
@@ -292,6 +295,7 @@ describe('Repository', () => {
     }
 
     expect(userToCheck.fullName).eq('withoutAlteringObject2');
+    expect(Math.floor(someDate.getTime() / 1000)).eq(someDateTimeStamp + 1);
   });
 
 });

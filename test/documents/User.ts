@@ -32,6 +32,9 @@ export class User extends BaseDocument {
   @Property()
   public createdAt: Date;
 
+  @Property()
+  public someDate: Date;
+
   @Property({isPrivate: true})
   public password: string;
 
