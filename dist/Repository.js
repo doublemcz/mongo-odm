@@ -209,7 +209,7 @@ class Repository {
             }
             omitUpdateDiff = true;
             const dbRecord = await this.find(this.getId(idOrObject));
-            updateObject = utils_1.difference(idOrObject, dbRecord);
+            updateObject = utils_1.difference(idOrObject, JSON.parse(JSON.stringify(dbRecord)));
         }
         const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
         for (const key of Object.keys(updateObject)) {
