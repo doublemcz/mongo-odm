@@ -68,14 +68,14 @@ export class Repository<T extends BaseDocument> {
       document = new this.documentType(document);
     }
 
-    this.handleHooks(document, 'preCreate');
+    await this.handleHooks(document, 'preCreate');
     const filteredObject = this.prepareObjectForSave(document);
     const result = await this.collection.insertOne(filteredObject);
     if (result.insertedId) {
       document._id = result.insertedId;
     }
 
-    this.handleHooks(document, 'postCreate');
+    await this.handleHooks(document, 'postCreate');
 
     return document;
   }
@@ -85,10 +85,10 @@ export class Repository<T extends BaseDocument> {
    * @param {string} type
    * @param {object} params
    */
-  public handleHooks(document: BaseDocument, type: string, params: any = {}) {
+  public async handleHooks(document: BaseDocument, type: string, params: any = {}) {
     if (document.hasHook(type)) {
       for (const hook of document.getOdmHooks()[type]) {
-        (document as any)[hook](params);
+        await (document as any)[hook](params);
       }
     }
   }
@@ -193,9 +193,9 @@ export class Repository<T extends BaseDocument> {
       }
     }
 
-    this.handleHooks(document, 'preDelete');
+    await this.handleHooks(document, 'preDelete');
     const result = await this.collection.deleteOne({_id: document._id}, options);
-    this.handleHooks(document, 'postDelete');
+    await this.handleHooks(document, 'postDelete');
 
     return result;
   }
@@ -261,7 +261,7 @@ export class Repository<T extends BaseDocument> {
     }
 
     // Apply hooks on document
-    this.handleHooks(document as BaseDocument, 'preUpdate', {updateObject: updateObject, beforeChange: temp});
+    await this.handleHooks(document as BaseDocument, 'preUpdate', {updateObject: updateObject, beforeChange: temp});
 
     if (!omitUpdateDiff) {
       // Compare with temp document what changed in hooks, if we send changed object without updateObject,
@@ -277,7 +277,7 @@ export class Repository<T extends BaseDocument> {
     }
 
     await this.updateInstanceAfterUpdate(document, updateObject, populate);
-    this.handleHooks(document, 'postUpdate', updateObject);
+    await this.handleHooks(document, 'postUpdate', updateObject);
 
     return document as T;
   }

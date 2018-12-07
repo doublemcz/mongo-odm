@@ -33,4 +33,15 @@ describe('Hooks', () => {
     expect(user.fullName).to.be.equal('postUpdateHookTest Works!');
   });
 
+  it('checks async pre create hook', async () => {
+    const userRepository = documentManager.getRepository<User>(User);
+    const user = await userRepository.create(new User({asyncFullNameTest: 'preCreateAsyncHook'}));
+    const theSameUser = await userRepository.find(user._id);
+    if (!theSameUser) {
+      throw new Error('Find is not working!');
+    }
+
+    expect(theSameUser.asyncFullNameTest).to.be.equal('preCreateAsyncHook Works!');
+  });
+
 });

@@ -33,7 +33,7 @@ export declare class Repository<T extends BaseDocument> {
      * @param {string} type
      * @param {object} params
      */
-    handleHooks(document: BaseDocument, type: string, params?: any): void;
+    handleHooks(document: BaseDocument, type: string, params?: any): Promise<void>;
     /**
      * @param {object} where
      * @param {string[]} populate

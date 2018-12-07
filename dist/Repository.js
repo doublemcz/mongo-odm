@@ -52,13 +52,13 @@ class Repository {
             // We got plain object - we need to recreate object with correct instance
             document = new this.documentType(document);
         }
-        this.handleHooks(document, 'preCreate');
+        await this.handleHooks(document, 'preCreate');
         const filteredObject = this.prepareObjectForSave(document);
         const result = await this.collection.insertOne(filteredObject);
         if (result.insertedId) {
             document._id = result.insertedId;
         }
-        this.handleHooks(document, 'postCreate');
+        await this.handleHooks(document, 'postCreate');
         return document;
     }
     /**
@@ -66,10 +66,10 @@ class Repository {
      * @param {string} type
      * @param {object} params
      */
-    handleHooks(document, type, params = {}) {
+    async handleHooks(document, type, params = {}) {
         if (document.hasHook(type)) {
             for (const hook of document.getOdmHooks()[type]) {
-                document[hook](params);
+                await document[hook](params);
             }
         }
     }
@@ -159,9 +159,9 @@ class Repository {
                 return null;
             }
         }
-        this.handleHooks(document, 'preDelete');
+        await this.handleHooks(document, 'preDelete');
         const result = await this.collection.deleteOne({ _id: document._id }, options);
-        this.handleHooks(document, 'postDelete');
+        await this.handleHooks(document, 'postDelete');
         return result;
     }
     /**
@@ -217,7 +217,7 @@ class Repository {
             document[key] = updateObject[key];
         }
         // Apply hooks on document
-        this.handleHooks(document, 'preUpdate', { updateObject: updateObject, beforeChange: temp });
+        await this.handleHooks(document, 'preUpdate', { updateObject: updateObject, beforeChange: temp });
         if (!omitUpdateDiff) {
             // Compare with temp document what changed in hooks, if we send changed object without updateObject,
             // we don't need to compute diff again
@@ -230,7 +230,7 @@ class Repository {
             Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
         }
         await this.updateInstanceAfterUpdate(document, updateObject, populate);
-        this.handleHooks(document, 'postUpdate', updateObject);
+        await this.handleHooks(document, 'postUpdate', updateObject);
         return document;
     }
     /**

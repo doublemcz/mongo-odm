@@ -35,12 +35,20 @@ export class User extends BaseDocument {
   @Property()
   public someDate: Date;
 
+  @Property()
+  public asyncFullNameTest: string;
+
   @Property({isPrivate: true})
   public password: string;
 
   @PreCreate()
-  public preCreate() {
+  public async preCreate() {
     this.createdAt = new Date();
+    this.asyncFullNameTest = await this.asyncFullNameTestFn();
+  }
+
+  private async asyncFullNameTestFn() {
+    return 'preCreateAsyncHook Works!'
   }
 
   @PostCreate()
