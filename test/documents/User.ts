@@ -38,6 +38,9 @@ export class User extends BaseDocument {
   @Property()
   public asyncFullNameTest: string;
 
+  @Property()
+  public asyncUpdateFullNameTest: string;
+
   @Property({isPrivate: true})
   public password: string;
 
@@ -63,6 +66,15 @@ export class User extends BaseDocument {
     if (this.fullName === 'preUpdateHookTest') {
       this.fullName = 'preUpdateHookTest Works!';
     }
+  }
+
+  @PreUpdate()
+  public async preUpdate2() {
+    this.asyncUpdateFullNameTest = await this.asyncFullNameTestFn2();
+  }
+
+  private async asyncFullNameTestFn2() {
+    return 'preUpdateAsyncHook Works!'
   }
 
   @PostUpdate()

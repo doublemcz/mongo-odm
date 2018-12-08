@@ -12,6 +12,7 @@ import { ObjectID } from 'bson';
 import { DocumentManager } from './DocumentManager';
 import { isArray, isObject, isString } from 'util';
 import { difference } from './utils';
+import Base = Mocha.reporters.Base;
 
 export class Repository<T extends BaseDocument> {
 
@@ -225,61 +226,71 @@ export class Repository<T extends BaseDocument> {
 
   /**
    * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
-   * @param {object} updateObject
+   * @param {object} diff
    * @param {string[]} populate
    * @param {object} updateWriteOpResultOutput
    * @returns {Promise<UpdateWriteOpResult>}
    */
-  public async update(idOrObject: Identifier, updateObject: any = undefined, populate: string[] = [], updateWriteOpResultOutput: any = {}): Promise<T | null> {
+  public async update(idOrObject: Identifier, diff: any = undefined, populate: string[] = [], updateWriteOpResultOutput: any = {}): Promise<T | null> {
     await this.checkCollection();
-    let document: BaseDocument | null = null;
-    if (!(idOrObject instanceof BaseDocument)) {
-      document = await this.find(this.getId(idOrObject));
-    } else {
-      document = idOrObject;
+    const dbRecord = await this.find(this.getId(idOrObject));
+    if (!dbRecord) {
+      throw new Error('You are trying to update object that does not exist');
     }
 
-    if (!document) {
-      return null;
-    }
-
-    let omitUpdateDiff = false;
-    if (updateObject === undefined) {
+    const wasDiffUndefined = diff === undefined;
+    if (diff === undefined) {
       if (!(idOrObject instanceof BaseDocument)) {
         throw new Error('You cannot use update this way. You must send an altered object as a first argument or you need to specify second argument object what should change');
       }
 
-      omitUpdateDiff = true;
-      const dbRecord = await this.find(this.getId(idOrObject));
-      updateObject = difference(this.prepareObjectForSave(idOrObject), JSON.parse(JSON.stringify(dbRecord)));
+      diff = this.difference(this.prepareObjectForSave(idOrObject), dbRecord);
     }
 
-    const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
-    for (const key of Object.keys(updateObject)) {
-      // Apply requested updates on fetched document
-      (document as any)[key] = updateObject[key];
+    let document: any;
+    if (idOrObject instanceof BaseDocument) {
+      document = idOrObject;
+    } else {
+      document = Object.assign(new this.documentType(), dbRecord);
+    }
+
+    if (!wasDiffUndefined || !(idOrObject instanceof BaseDocument)) {
+      // We need to apply diff to newly created Document instance of apply it to given object
+      for (const key of Object.keys(diff)) {
+        // Apply requested updates on fetched document
+        (document as any)[key] = diff[key];
+      }
     }
 
     // Apply hooks on document
-    await this.handleHooks(document as BaseDocument, 'preUpdate', {updateObject: updateObject, beforeChange: temp});
+    await this.handleHooks(document as BaseDocument, 'preUpdate', {diff, dbRecord});
 
-    if (!omitUpdateDiff) {
-      // Compare with temp document what changed in hooks, if we send changed object without updateObject,
-      // we don't need to compute diff again
-      const preparedDocument = this.prepareObjectForSave(document);
-      const preparedTemp = this.prepareObjectForSave(temp);
-      updateObject = difference(preparedDocument, preparedTemp);
+    // Compute changes again - document could change in hooks
+    if (idOrObject instanceof BaseDocument) {
+      diff = this.difference(this.prepareObjectForSave(document), dbRecord);
+    } else {
+      diff = this.difference(document, dbRecord);
     }
 
-    if (Object.keys(updateObject).length) {
-      const updateWriteOpResult = await this.collection.updateOne({_id: document._id}, {$set: updateObject});
+    if (Object.keys(diff).length) {
+      const updateWriteOpResult = await this.collection.updateOne({_id: dbRecord._id}, {$set: diff});
       Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
     }
 
-    await this.updateInstanceAfterUpdate(document, updateObject, populate);
-    await this.handleHooks(document, 'postUpdate', updateObject);
+    await this.updateInstanceAfterUpdate(document, diff, populate);
+    await this.handleHooks(document, 'postUpdate',  {diff, dbRecord});
 
     return document as T;
+  }
+
+  private difference(changed: any, origin: any) {
+    const diff = difference(JSON.parse(JSON.stringify(changed)), JSON.parse(JSON.stringify(origin)));
+    const result: any = {};
+    for (const key of Object.keys(diff)) {
+      result[key] = changed[key];
+    }
+
+    return result;
   }
 
   /**
@@ -680,7 +691,7 @@ export class Repository<T extends BaseDocument> {
    * @param {object} objectToBeSaved
    * @returns {object}
    */
-  private prepareObjectForSave(objectToBeSaved: any) {
+  private prepareObjectForSave(objectToBeSaved: any): any {
     const result: any = {};
     for (const key of Object.keys(objectToBeSaved)) {
       // Filter unknown properties

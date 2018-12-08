@@ -185,53 +185,62 @@ class Repository {
     }
     /**
      * @param {BaseDocument|ObjectId|string} idOrObject If you pass an instance of BaseDocument you will get it back with updated fields
-     * @param {object} updateObject
+     * @param {object} diff
      * @param {string[]} populate
      * @param {object} updateWriteOpResultOutput
      * @returns {Promise<UpdateWriteOpResult>}
      */
-    async update(idOrObject, updateObject = undefined, populate = [], updateWriteOpResultOutput = {}) {
+    async update(idOrObject, diff = undefined, populate = [], updateWriteOpResultOutput = {}) {
         await this.checkCollection();
-        let document = null;
-        if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) {
-            document = await this.find(this.getId(idOrObject));
+        const dbRecord = await this.find(this.getId(idOrObject));
+        if (!dbRecord) {
+            throw new Error('You are trying to update object that does not exist');
         }
-        else {
-            document = idOrObject;
-        }
-        if (!document) {
-            return null;
-        }
-        let omitUpdateDiff = false;
-        if (updateObject === undefined) {
+        const wasDiffUndefined = diff === undefined;
+        if (diff === undefined) {
             if (!(idOrObject instanceof BaseDocument_1.BaseDocument)) {
                 throw new Error('You cannot use update this way. You must send an altered object as a first argument or you need to specify second argument object what should change');
             }
-            omitUpdateDiff = true;
-            const dbRecord = await this.find(this.getId(idOrObject));
-            updateObject = utils_1.difference(idOrObject, JSON.parse(JSON.stringify(dbRecord)));
+            diff = this.difference(this.prepareObjectForSave(idOrObject), dbRecord);
         }
-        const temp = Object.assign(new this.documentType(), JSON.parse(JSON.stringify(document)));
-        for (const key of Object.keys(updateObject)) {
-            // Apply requested updates on fetched document
-            document[key] = updateObject[key];
+        let document;
+        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
+            document = idOrObject;
+        }
+        else {
+            document = Object.assign(new this.documentType(), dbRecord);
+        }
+        if (!wasDiffUndefined || !(idOrObject instanceof BaseDocument_1.BaseDocument)) {
+            // We need to apply diff to newly created Document instance of apply it to given object
+            for (const key of Object.keys(diff)) {
+                // Apply requested updates on fetched document
+                document[key] = diff[key];
+            }
         }
         // Apply hooks on document
-        await this.handleHooks(document, 'preUpdate', { updateObject: updateObject, beforeChange: temp });
-        if (!omitUpdateDiff) {
-            // Compare with temp document what changed in hooks, if we send changed object without updateObject,
-            // we don't need to compute diff again
-            const preparedDocument = this.prepareObjectForSave(document);
-            const preparedTemp = this.prepareObjectForSave(temp);
-            updateObject = utils_1.difference(preparedDocument, preparedTemp);
+        await this.handleHooks(document, 'preUpdate', { diff, dbRecord });
+        // Compute changes again - document could change in hooks
+        if (idOrObject instanceof BaseDocument_1.BaseDocument) {
+            diff = this.difference(this.prepareObjectForSave(document), dbRecord);
         }
-        if (Object.keys(updateObject).length) {
-            const updateWriteOpResult = await this.collection.updateOne({ _id: document._id }, { $set: updateObject });
+        else {
+            diff = this.difference(document, dbRecord);
+        }
+        if (Object.keys(diff).length) {
+            const updateWriteOpResult = await this.collection.updateOne({ _id: dbRecord._id }, { $set: diff });
             Object.assign(updateWriteOpResultOutput, updateWriteOpResult);
         }
-        await this.updateInstanceAfterUpdate(document, updateObject, populate);
-        await this.handleHooks(document, 'postUpdate', updateObject);
+        await this.updateInstanceAfterUpdate(document, diff, populate);
+        await this.handleHooks(document, 'postUpdate', { diff, dbRecord });
         return document;
+    }
+    difference(changed, origin) {
+        const diff = utils_1.difference(JSON.parse(JSON.stringify(changed)), JSON.parse(JSON.stringify(origin)));
+        const result = {};
+        for (const key of Object.keys(diff)) {
+            result[key] = changed[key];
+        }
+        return result;
     }
     /**
      * @param {BaseDocument} instance
